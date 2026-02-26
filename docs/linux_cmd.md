@@ -9,16 +9,16 @@ We use `tc qdisc` commands to:
 - add a queue management algorithms to emulate different queuing behaviors on switches.
 - replace qdiscs on sender when a particular TCP algorithm.
 
-## What are the defaults
+### Defaults
 
 - Root qdisc: `pfifo_fast` / kernel default FIFO behavior (no advanced AQM or per-flow fairness).
 - qdisc parameters: `pfifo` has a small default limit by packets, while advanced qdiscs like `red` or `fq_codel` have tunable thresholds and internal defaults that vary by kernel version.
 
 Because Mininet runs virtualized namespaces, Mininet may call `tc` inside those namespaces; if you don't explicitly set a qdisc, the default applies there too.
 
-### Mininet setup
+### Setup
 
-The following `tc` commands are used in the mininet setup:
+The following `tc` commands are used in the mininet `queue` setup:
 
 - `sudo tc qdisc replace dev <interface> root <qdisc_kind> [parameters]`: Replace the qdisc config.
 
@@ -26,7 +26,7 @@ The following `tc` commands are used in the mininet setup:
 
 - `sudo tc qdisc add dev <interface> root <qdisc_kind> [parameters]`. Adds a new qdisc config. If one already exists, it throws an error.
 
-See `man tc-<qdisc_kind` for the `qdisc_kind` and their corresponding parameters. (or https://man7.org/linux/man-pages/man8/tc.8.html)
+See `man tc-<qdisc_kind>` for the `qdisc_kind` and their corresponding parameters. (or https://man7.org/linux/man-pages/man8/tc.8.html)
 
 
 These are some examples of queue management at `switches`:
@@ -39,11 +39,28 @@ These are some examples of queue management at `switches`:
 
 `sysctl` is used for more general kernel configuration changes. We use it to configure the `net.ipv4` TPC config at the endpoint (mainly the `sender`):
 
+### Defaults
+
+- ECN: disabled by default (kernel sysctl `net.ipv4.tcp_ecn = 0`).
+- Allowed congestion-control algorithms: the kernel exposes a set of compiled algorithms in `/proc/sys/net/ipv4/tcp_allowed_congestion_control` — often just `cubic`/`reno` unless others were loaded (`dctcp`, `bbr`) using `modprobe`.
+
+### Setup
+
 - `net.ipv4.tcp_ecn=1` to enable ECN support in the sender. This means that the ECN are not ignored in the packet.
 - `net.ipv4.tcp_allowed_congestion_control="cubic reno dctcp bbr"` so the desired algorithms are selectable.
 - `net.ipv4.tcp_ecn_fallback=0` to prevent fallback to loss-based behavior when ECN negotiation fails (important when testing DCTCP)
 
-### Defaults
+## iperf3
 
-- ECN: disabled by default (kernel sysctl `net.ipv4.tcp_ecn = 0`).
-- Allowed congestion-control algorithms: the kernel exposes a set of compiled algorithms in `/proc/sys/net/ipv4/tcp_allowed_congestion_control` — often just `cubic`/`reno` unless others were loaded (`dctcp`, `bbr`).
+`iperf` is used to measure network performance such as throughput, rtt, loss, etc.
+
+When we generate differnt types of traffic patterns, we start collecting data about to the performance by running the iperf3 server in the background.
+
+After the simulation ends, we kill it using `pkill iperf3`.
+
+We use:
+- `sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca} -J --logfile` is runs from the sender to the reciever for 15s with `sender_cca` congestion control algorithm and collects data in the logfile in json format.
+- Other traffic patterns using the following iperf parameters:
+  - `-n`: Number of bytes to transmit
+  - `-b`: bandwidth for TCP (only UDP for IPERF 2): Set target bandwidth to n bits/sec (default 1 Mbit/sec for UDP, unlimited for TCP)
+  See https://iperf.fr/iperf-doc.php for more info. 
