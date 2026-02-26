@@ -4,14 +4,15 @@ from mininet.net import Mininet
 from mininet.node import Controller
 from mininet.link import TCLink
 from mininet.log import setLogLevel, info
-from generate_topology import MininetTopology
+from topology import MininetTopology, TopologyType
 from configure_settings import configure_settings
-from generate_traffic import generate_traffic
+from generate_traffic import generate_traffic, TrafficPattern
+from configure_settings import CongestionControlAlgo, QueueManagement, ReceiverFeedback
 
 # TODO: check if we need to change this to a parameter for run_experiment
 NUM_SENDERS = 4
 
-def run_experiment(topology_type, sender_cca, switch_aqm, receiver_ack, traffic_pattern, log_directory):
+def run_experiment(topology_type: TopologyType, sender_cca: CongestionControlAlgo, switch_aqm: QueueManagement, receiver_ack: ReceiverFeedback, traffic_pattern: TrafficPattern, log_directory: str):
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
 
@@ -38,10 +39,10 @@ if __name__ == '__main__':
     # TODO: write a script to run experiment for multiple scenarios
     # TODO: generate log directory names for different scenarios
     run_experiment(
-        topology_type='incast',
-        sender_cca='dctcp', 
-        switch_aqm='ecn', 
-        receiver_ack='normal_ack', 
-        traffic_pattern='bursty', 
+        topology_type=TopologyType.STAR,
+        sender_cca=CongestionControlAlgo.DCTCP, 
+        switch_aqm=QueueManagement.ECN, 
+        receiver_ack=ReceiverFeedback.IMMEDIATE_ACK, 
+        traffic_pattern=TrafficPattern.BURSTY, 
         log_dir='incast_dctcp_ecn_normal_ack_bursty'
     )

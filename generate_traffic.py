@@ -1,6 +1,13 @@
 import time
 import os
 from mininet.log import info
+from enum import Enum
+
+class TrafficPattern(Enum):
+    ELEPHANT_VS_MICE = 'elephant_vs_mice'
+    CONSTANT = 'constant'
+    BURSTY = 'bursty'
+
 
 # Traffic pattern must be one of 'elephant_vs_mice', 'constant', or 'bursty'
 def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_directory):
@@ -19,7 +26,7 @@ def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_director
 
     info(f"Generating Traffic: {traffic_pattern}\n")
 
-    if traffic_pattern == 'elephant_vs_mice':
+    if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
         # We generate one long-lived (elephant) flow that will run for 15 seconds.
         senders[0].cmd(f'sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca} -J --logfile {log_directory}/elephant.json &')
         time.sleep(2)
@@ -27,13 +34,13 @@ def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_director
         for i, s in enumerate(senders[1:]):
             s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5002+i} -n 500K -C {sender_cca} -J --logfile {log_directory}/mouse_{i}.json &')
 
-    elif traffic_pattern == 'constant':
+    elif traffic_pattern == TrafficPattern.CONSTANT:
         # Each sender just sends a constant stream of 5 Mbps from each sender for 15 seconds. 
         # TODO: adjust bitrate as needed if this creates too much congestion.
         for i, s in enumerate(senders):
             s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 5M -C {sender_cca} -J --logfile {log_directory}/h{i+1}.json &')
 
-    elif traffic_pattern == 'bursty':
+    elif traffic_pattern == TrafficPattern.BURSTY:
         # Each sender has a target bitrate of 2 Mbps, sending in bursts of 20 packets for 15 seconds.
         # TODO: adjust bitrate as needed if this creates too much congestion.
         for i, s in enumerate(senders):
