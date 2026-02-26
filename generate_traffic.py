@@ -2,7 +2,8 @@ import time
 import os
 from mininet.log import info
 
-def generate_traffic(net, traffic_pattern, sender_cca, log_directory, num_senders):
+# Traffic pattern must be one of 'elephant_vs_mice', 'constant', or 'bursty'
+def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_directory):
     receiver = net.get('receiver')
     receiver_ip = receiver.IP()
     senders = []
@@ -37,3 +38,6 @@ def generate_traffic(net, traffic_pattern, sender_cca, log_directory, num_sender
         # TODO: adjust bitrate as needed if this creates too much congestion.
         for i, s in enumerate(senders):
             s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 2M/20 -C {sender_cca} -J --logfile {log_directory}/h{i+1}.json &')
+
+    # Sleep 20 seconds to allow all flows to complete.
+    time.sleep(20)
