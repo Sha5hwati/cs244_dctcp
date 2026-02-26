@@ -10,6 +10,9 @@ BANDWIDTH_STAR = 10  # Mbps
 QUEUE_SIZE_STAR = 64
 DELAY_STAR = '1ms'
 
+SRC_NAME = 'switch1'
+DST_NAME = 'receiver'
+
 class TopologyType(Enum):
     DUMBBELL = 'dumbbell'
     STAR = 'star'
@@ -27,7 +30,7 @@ class MininetTopology(Topo):
             self._star(num_senders)
         else:
             raise ValueError(f"Unsupported topology type: {type}")
-            
+
     def _dumbbell(self, num_senders: int):
         # First add a single switch and a receiver.
         switch1 = self.addSwitch('switch1')
