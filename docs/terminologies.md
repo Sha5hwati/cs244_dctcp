@@ -35,6 +35,14 @@ Eg. Small LANs, Home network
 
 ![star](https://www.conceptdraw.com/How-To-Guide/picture/star-network-topology-diagram.png)
 
+### Torus (3D Mesh)
+A 3D mesh network where edges wrap around, forming a torus in each dimension.
+
+Eg. Parallel computer, supercomputers
+
+![torus](https://clusterdesign.org/wp-content/uploads/2012/09/fujitsu-3d-torus.jpg)
+
+
 ## Traffic patterns
 
 | Pattern | Description | Example |
