@@ -9,7 +9,7 @@ Multiple senders connect to one router, multiple receivers connect to another ro
 
 Eg. TCP congestion control experiments
 
-![dumbbell](https://www.researchgate.net/profile/Nooshin-Bigdeli/publication/228954007/figure/fig1/AS:393654268121103@1470865899241/Dumbbell-network-topology.png)
+![dumbbell](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTu4QcCyR4BI9PLRJYbKWUqvPyFWiXRn-o0nw&s)
 
 ### Clos (aka Fat Tree)
 
@@ -17,7 +17,7 @@ A Clos topology (often implemented as a fat-tree) is a multi-stage hierarchical 
 
 Eg. Datacenter RPC, MapReduce-style shuffle
 
-![clos](https://www.researchgate.net/publication/304068722/figure/fig6/AS:391340278992964@1470314201946/Fat-tree-data-center-network-topology.png)
+![clos](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJzAfQkAd0BeY_lq1BM2B7aB4ryIeMZBjr-g&s)
 
 ### Leaf-spine
 
@@ -49,31 +49,20 @@ Eg. Small LANs, Home network
 
 ## Measurements
 
-### Throughput
-Rate of successfully delivered useful data (bits/sec).
-
-### Latency
-One-way delay from sender to receiver. This includes Propagation delay, serialization delay, queuing delay and processing delay. Queuing delays are usually the bottleneck.
-
-### RTT (Round Trip Time)
-Time for a packet to travel from sender to receiver, and back.
-
-Approximation:
-RTT ≈ 2 × one-way latency (in symmetric paths)
-
-### Fairness
-Degree to which competing flows share bandwidth equally.
+| Metric | Definition | Notes / Units |
+|---|---|---|
+| Throughput | Rate of successfully delivered useful data. | Typically measured in bits/sec (bps, Kbps, Mbps, Gbps). |
+| Latency | One-way delay from sender to receiver. | Includes propagation, serialization, queuing, and processing delays. Queuing delay is usually dominant; measured in ms. |
+| RTT (Round-Trip Time) | Time for a packet to travel from sender to receiver and back. | Approximation: RTT ≈ 2 × one-way latency for symmetric paths. Measured in ms. |
+| Fairness | Degree to which competing flows share bandwidth equally. | Often quantified with metrics like Jain's fairness index; important for multi-flow scenarios. |
 
 ## Congestion Control Algorithms
 
-### CUBIC
-Loss based congestion control. Sender uses AIMD with cubic growth function. Leads to higher queue build up since it waits for actual packet losses.
-
-### BBR (Bottleneck Bandwidth and RTT)
-Model based congestion control to minimize packet loss. Sender tries to estimate the bottleneck badwidth and keep track of min RTT to estimate the window size ~ Bandwidth x min RTT. Leads to low loss and small queue size.
-
-### DCTCP (Data center TCP)
-Receiver marks packets with ECN bit before the switch experiences buffer overflow. Sender reduces window proportionally to ECN-marked fraction. Leads to fast feedback loop before any packets are lost.
+| Algorithm | Type | Description & Notes |
+|---|---|---|
+| CUBIC | Loss-based (AIMD with cubic growth) | Uses a cubic window-growth function after loss events. Tends to push for high throughput but can cause larger queue build-up because it relies on packet loss as a congestion signal. |
+| BBR (Bottleneck Bandwidth and RTT) | Model-based | Estimates bottleneck bandwidth and minimum RTT to set sending rate (approx. BtlBw × minRTT). Aims to operate at the bottleneck without filling queues, resulting in low loss and smaller queues. |
+| DCTCP (Data Center TCP) | ECN-based | Uses ECN marks from switches to measure congestion; sender reduces its window proportionally to the fraction of ECN-marked packets. Provides fast, fine-grained feedback and keeps queues shallow in datacenter environments. |
 
 
 ## Active Queue Management (AQM)
