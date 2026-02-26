@@ -22,7 +22,7 @@ class MininetTopology(Topo):
          type: The type of topology to create (e.g., 'dumbbell' or 'star').
         '''
         if type == TopologyType.DUMBBELL:
-            self._dumbbell(num_senders)x
+            self._dumbbell(num_senders)
         elif type == TopologyType.STAR:
             self._star(num_senders)
         else:
