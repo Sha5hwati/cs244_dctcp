@@ -1,64 +1,92 @@
-import os
-import time
+import subprocess
+from pathlib import Path
+
 from mininet.net import Mininet
 from mininet.node import OVSController, OVSSwitch
 from mininet.link import TCLink
 from mininet.log import setLogLevel, info
+
 from topology import MininetTopology, TopologyType
-from configure_settings import configure_settings
+from configure_network import configure_network
 from generate_traffic import generate_traffic, TrafficPattern
-from configure_settings import CongestionControlAlgo, QueueManagement, ReceiverFeedback
+from configure_network import (
+    CongestionControlAlgo,
+    QueueManagement,
+    ReceiverFeedback,
+)
 
 # TODO: check if we need to change this to a parameter for run_experiment
 NUM_SENDERS = 4
 
-def run_experiment(topology_type: TopologyType, sender_cca: CongestionControlAlgo, switch_qm: QueueManagement, receiver_ack: ReceiverFeedback, traffic_pattern: TrafficPattern):
-    print(f"Running Experiment with topology={topology_type}, sender_cca={sender_cca}, switch_qm={switch_qm}, receiver_ack={receiver_ack}, traffic_pattern={traffic_pattern}")
+def run_experiment(
+    topology_type: TopologyType,
+    sender_cca: CongestionControlAlgo,
+    switch_qm: QueueManagement,
+    receiver_ack: ReceiverFeedback,
+    traffic_pattern: TrafficPattern,
+):
+    """Create a Mininet topology, apply settings, run traffic, and collect logs.
 
-    mininet_topology = MininetTopology()
-    mininet_topology.create(num_senders=NUM_SENDERS, type=topology_type)
-    
+    The experiment writes logs to data/<topo>_<cca>_<qm>_<ack>_<pattern>.
+    """
+
+    print(
+        f"Running experiment: topology={topology_type.value} "
+        f"cca={sender_cca.value} qm={switch_qm.value} "
+        f"ack={receiver_ack.value} pattern={traffic_pattern.value}"
+    )
+
+    topo = MininetTopology()
+    topo.create(num_senders=NUM_SENDERS, type=topology_type)
+
     print("Starting Mininet...")
-    net = Mininet(topo=mininet_topology, switch=OVSSwitch, link=TCLink, controller=OVSController)
-    
+    net = Mininet(topo=topo, switch=OVSSwitch, link=TCLink, controller=OVSController)
     net.start()
-    # Avoid ARP request so we don't have extra delay on the first packet.
+    # Avoid ARP requests so we don't have extra delay on the first packet.
     net.staticArp()
-    
-    # Configure settings and generate traffic.
+
+    # Configure devices in the topology.
     print("Configuring settings...")
-    configure_settings(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_ack=receiver_ack)
+    configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_ack=receiver_ack)
     print_config(net)
 
+    # Generate traffic.
     print("Generating traffic...")
-    log_exp = f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
-    if not os.path.exists(log_exp):
-        os.makedirs(log_exp)
-    generate_traffic(net, traffic_pattern=traffic_pattern, num_senders=NUM_SENDERS, sender_cca=sender_cca, 
-                     log_directory=log_exp)
+    log_exp = Path(
+        f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
+    )
+    log_exp.mkdir(parents=True, exist_ok=True)
+
+    generate_traffic(
+        net,
+        traffic_pattern=traffic_pattern,
+        num_senders=NUM_SENDERS,
+        sender_cca=sender_cca,
+        log_directory=str(log_exp),
+    )
     print_config(net)
 
     # Kill all iperf processes and clear any mininet configurations.
-    os.system('sudo pkill iperf3')
+    subprocess.run(["sudo", "pkill", "iperf3"], check=False)
     net.stop()
-    # TODO: see if this is needed.
-    os.system('sudo mn -c')
+    # Cleanup Mininet state.
+    subprocess.run(["sudo", "mn", "-c"], check=False)
     info(f"Experiment {log_exp} Complete\n")
 
 def print_config(net):
-    print("\n------------ Mininet Network Configuration ------------")
+    print("\n\n------------ Mininet Network Configuration ------------")
     for host in net.hosts:
-        # Execute the sysctl command on the host
-        algo = host.cmd('sysctl -n net.ipv4.tcp_congestion_control').strip()
+        algo = host.cmd("sysctl -n net.ipv4.tcp_congestion_control").strip()
         print(f"Host {host.name}: {algo}")
+
     for switch in net.switches:
-        qm = switch.cmd('sudo tc qdisc show').strip()
+        qm = switch.cmd("sudo tc qdisc show").strip()
         print(f"Switch {switch.name}: {qm}")
-    receiver = net.get('receiver')
-    fb = receiver.cmd('sysctl -n net.ipv4.tcp_ecn').strip()
-    print(f"Receiver {receiver.name}: {fb}")
-    print("------------ End of Configuration ---------------\n")
-    print("\n\n\n")
+
+    receiver = net.get("receiver")
+    fb = receiver.cmd("sysctl -n net.ipv4.tcp_ecn").strip()
+    print(f"Receiver {receiver.name}: tcp_ecn={fb}")
+    print("------------ End of Configuration ---------------\n\n")
 
 if __name__ == '__main__':
     setLogLevel('info')

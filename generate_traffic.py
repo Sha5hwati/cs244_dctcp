@@ -1,7 +1,10 @@
 import time
-import os
-from mininet.log import info
+from pathlib import Path
 from enum import Enum
+
+from mininet.net import Mininet
+from mininet.log import info
+from configure_network import CongestionControlAlgo
 
 class TrafficPattern(Enum):
     ELEPHANT_VS_MICE = 'elephant_vs_mice'
@@ -9,42 +12,62 @@ class TrafficPattern(Enum):
     BURSTY = 'bursty'
 
 
-# Traffic pattern must be one of 'elephant_vs_mice', 'constant', or 'bursty'
-def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_directory):
+def generate_traffic(
+    net: Mininet, 
+    traffic_pattern: TrafficPattern,
+    num_senders: int, 
+    sender_cca: CongestionControlAlgo, 
+    log_directory: str,
+) -> None:
+    """Generate traffic in the Mininet topology according to the specified pattern.
+    """
     receiver = net.get('receiver')
     receiver_ip = receiver.IP()
-    senders = []
-    for i in range(num_senders):
-        senders.append(net.get(f'sender{i+1}'))
-    
-    # iperf3 only supports flow from a single client to a single server port. To
-    # support flows from multiple senders, we have to open an iperf3 server on 
-    # a different port for each sender.
+
+    # Collect sender host objects
+    senders = [net.get(f"sender{i+1}") for i in range(num_senders)]
+
+    # Start one iperf3 server per sender on consecutive ports
     for port in range(5001, 5001 + num_senders):
-        receiver.cmd(f'sudo iperf3 -s -p {port} -D')
+        receiver.cmd(f"sudo iperf3 -s -p {port} -D")
+
+    # Allow servers to spin up
     time.sleep(1)
 
-    info(f"Generating Traffic: {traffic_pattern}\n")
+    info(f"Traffic pattern: {traffic_pattern.value}\n")
+
+    log_dir = Path(log_directory)
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
-        # We generate one long-lived (elephant) flow that will run for 15 seconds.
-        senders[0].cmd(f'sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca.value} -J --logfile {log_directory}/elephant.json &')
+        # One long-lived elephant flow
+        senders[0].cmd(
+            f"sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca.value} -J --logfile {log_dir}/elephant.json &"
+        )
         time.sleep(2)
-        # For each of the other senders, send 500KB of data on a short-lived (mouse) flow.
-        for i, s in enumerate(senders[1:]):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5002+i} -n 500K -C {sender_cca.value} -J --logfile {log_directory}/mouse_{i}.json &')
+
+        # Other senders produce short 'mouse' transfers (500 KB)
+        for idx, s in enumerate(senders[1:], start=1):
+            port = 5001 + idx
+            s.cmd(
+                f"sudo iperf3 -c {receiver_ip} -p {port} -n 500K -C {sender_cca.value} -J --logfile {log_dir}/mouse_{idx-1}.json &"
+            )
 
     elif traffic_pattern == TrafficPattern.CONSTANT:
-        # Each sender just sends a constant stream of 5 Mbps from each sender for 15 seconds. 
-        # TODO: adjust bitrate as needed if this creates too much congestion.
-        for i, s in enumerate(senders):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 5M -C {sender_cca.value} -J --logfile {log_directory}/sender{i+1}.json &')
+        # Each sender streams at 5 Mbps for 15s
+        for idx, s in enumerate(senders):
+            port = 5001 + idx
+            s.cmd(
+                f"sudo iperf3 -c {receiver_ip} -p {port} -t 15 -b 5M -C {sender_cca.value} -J --logfile {log_dir}/sender{idx+1}.json &"
+            )
 
     elif traffic_pattern == TrafficPattern.BURSTY:
-        # Each sender has a target bitrate of 2 Mbps, sending in bursts of 20 packets for 15 seconds.
-        # TODO: adjust bitrate as needed if this creates too much congestion.
-        for i, s in enumerate(senders):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 2M/20 -C {sender_cca.value} -J --logfile {log_directory}/sender{i+1}.json &')
+        # Bursty pattern: 2 Mbps in bursts (tunable)
+        for idx, s in enumerate(senders):
+            port = 5001 + idx
+            s.cmd(
+                f"sudo iperf3 -c {receiver_ip} -p {port} -t 15 -b 2M/20 -C {sender_cca.value} -J --logfile {log_dir}/sender{idx+1}.json &"
+            )
 
-    # Sleep 20 seconds to allow all flows to complete.
+    # Allow flows to finish
     time.sleep(20)
