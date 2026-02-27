@@ -30,13 +30,12 @@ def run_experiment(topology_type: TopologyType, sender_cca: CongestionControlAlg
     configure_settings(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_ack=receiver_ack)
     print_config(net)
 
-    log_directory = f"{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
-    if not os.path.exists(log_directory):
-        os.makedirs(log_directory)
-
     print("Generating traffic...")
+    log_exp = f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
+    if not os.path.exists(log_exp):
+        os.makedirs(log_exp)
     generate_traffic(net, traffic_pattern=traffic_pattern, num_senders=NUM_SENDERS, sender_cca=sender_cca, 
-                     log_directory=log_directory)
+                     log_directory=log_exp)
     print_config(net)
 
     # Kill all iperf processes and clear any mininet configurations.
@@ -44,7 +43,7 @@ def run_experiment(topology_type: TopologyType, sender_cca: CongestionControlAlg
     net.stop()
     # TODO: see if this is needed.
     os.system('sudo mn -c')
-    info(f"Experiment {log_directory} Complete\n")
+    info(f"Experiment {log_exp} Complete\n")
 
 def print_config(net):
     print("\n------------ Mininet Network Configuration ------------")
