@@ -24,6 +24,7 @@ class MininetTopology(Topo):
          num_senders: The number of sender hosts to include in the topology.
          type: The type of topology to create (e.g., 'dumbbell' or 'star').
         '''
+        print(f"Creating topology with {num_senders} senders and type {type}")
         if type == TopologyType.DUMBBELL:
             self._dumbbell(num_senders)
         elif type == TopologyType.STAR:

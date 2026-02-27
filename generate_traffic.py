@@ -28,23 +28,23 @@ def generate_traffic(net, traffic_pattern, num_senders, sender_cca, log_director
 
     if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
         # We generate one long-lived (elephant) flow that will run for 15 seconds.
-        senders[0].cmd(f'sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca} -J --logfile {log_directory}/elephant.json &')
+        senders[0].cmd(f'sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C {sender_cca.value} -J --logfile {log_directory}/elephant.json &')
         time.sleep(2)
         # For each of the other senders, send 500KB of data on a short-lived (mouse) flow.
         for i, s in enumerate(senders[1:]):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5002+i} -n 500K -C {sender_cca} -J --logfile {log_directory}/mouse_{i}.json &')
+            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5002+i} -n 500K -C {sender_cca.value} -J --logfile {log_directory}/mouse_{i}.json &')
 
     elif traffic_pattern == TrafficPattern.CONSTANT:
         # Each sender just sends a constant stream of 5 Mbps from each sender for 15 seconds. 
         # TODO: adjust bitrate as needed if this creates too much congestion.
         for i, s in enumerate(senders):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 5M -C {sender_cca} -J --logfile {log_directory}/h{i+1}.json &')
+            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 5M -C {sender_cca.value} -J --logfile {log_directory}/sender{i+1}.json &')
 
     elif traffic_pattern == TrafficPattern.BURSTY:
         # Each sender has a target bitrate of 2 Mbps, sending in bursts of 20 packets for 15 seconds.
         # TODO: adjust bitrate as needed if this creates too much congestion.
         for i, s in enumerate(senders):
-            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 2M/20 -C {sender_cca} -J --logfile {log_directory}/h{i+1}.json &')
+            s.cmd(f'sudo iperf3 -c {receiver_ip} -p {5001+i} -t 15 -b 2M/20 -C {sender_cca.value} -J --logfile {log_directory}/sender{i+1}.json &')
 
     # Sleep 20 seconds to allow all flows to complete.
     time.sleep(20)
