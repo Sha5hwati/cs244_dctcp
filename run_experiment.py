@@ -6,7 +6,7 @@ from mininet.node import OVSController, OVSSwitch
 from mininet.link import TCLink
 from mininet.log import setLogLevel, info
 
-from topology import MininetTopology, TopologyType
+from initialize_topology import MininetTopology, TopologyType
 from configure_network import configure_network
 from generate_traffic import generate_traffic, TrafficPattern
 from configure_network import (
@@ -24,7 +24,7 @@ def run_experiment(
     switch_qm: QueueManagement,
     receiver_ack: ReceiverFeedback,
     traffic_pattern: TrafficPattern,
-):
+) -> None:
     """Create a Mininet topology, apply settings, run traffic, and collect logs.
 
     The experiment writes logs to data/<topo>_<cca>_<qm>_<ack>_<pattern>.
@@ -44,9 +44,10 @@ def run_experiment(
     net.start()
     # Avoid ARP requests so we don't have extra delay on the first packet.
     net.staticArp()
+    print("Mininet started successfully\n\n")
 
     # Configure devices in the topology.
-    print("Configuring settings...")
+    print("Configuring network...")
     configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_ack=receiver_ack)
     print_config(net)
 
@@ -56,7 +57,6 @@ def run_experiment(
         f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
     )
     log_exp.mkdir(parents=True, exist_ok=True)
-
     generate_traffic(
         net,
         traffic_pattern=traffic_pattern,

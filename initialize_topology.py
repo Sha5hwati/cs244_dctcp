@@ -21,10 +21,7 @@ class TopologyType(Enum):
 
 
 class MininetTopology(Topo):
-    """Simple topology factory used by the experiment harness.
-
-    Use `create(num_senders, type)` to populate the Topo. This keeps the
-    public API small and matches Mininet examples.
+    """Mininet Topology class that can be populated with different topologies based on the experiment configuration.
     """
 
     def create(self, num_senders: int, type: TopologyType) -> None:

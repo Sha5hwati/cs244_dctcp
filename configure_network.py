@@ -1,3 +1,4 @@
+import os
 import subprocess
 from enum import Enum
 
@@ -28,16 +29,14 @@ def configure_network(
     switch_qm: QueueManagement,
     receiver_ack: ReceiverFeedback,
 ) -> None:
-    """Configure CC algorithm, switch AQM and receiver ACK strategies inside Mininet.
+    """Configure CC algorithm, switch QM and receiver ACK strategies inside Mininet.
 
     This function applies per-namespace sysctls and `tc` qdisc settings for all hosts and
-    switches in the provided Mininet `net` object.
+    switches in Mininet.
     """
 
     receiver = net.get("receiver")
-
-    # Ensure kernel module for the desired CCA is loaded in the root namespace.
-    load_congestion_control_algo(sender_cca)
+    print(f"Setup: CCA={sender_cca.value}, switch QM={switch_qm.value}, receiver ACK={receiver_ack.value}")
 
     # Configure same CCA for senders and receiver.
     # TODO: figure out if we need to configure here as well or if OS level is sufficient
@@ -46,6 +45,11 @@ def configure_network(
 
     for host in net.hosts:
         # Enable the allowed set and select the desired algorithm.
+        try:
+            host.cmd(f"sudo sysctl -w net.ipv4.tcp_available_congestion_control=\"{allowed_cc}\"")
+        except subprocess.CalledProcessError as e:
+            print(f"Error loading congestion control algorithm {allowed_cc}: {e}")
+            return
         host.cmd(f"sudo sysctl -w net.ipv4.tcp_allowed_congestion_control=\"{allowed_cc}\"")
         host.cmd(f"sudo sysctl -w net.ipv4.tcp_congestion_control={sender_cca.value}")
         print(f"Configured {host.name} with congestion control algorithm {sender_cca.value}")
@@ -95,25 +99,3 @@ def configure_network(
     receiver.cmd(
         f"sudo ip route change 10.0.0.0/8 dev {receiver.name}-eth0 proto kernel scope link src {receiver.IP()} quickack {quickack_val}"
     )
-
-
-def load_congestion_control_algo(algo: CongestionControlAlgo):
-    '''
-    Loads the kernel module for the specified congestion control algorithm if it's not already loaded.
-    '''
-    if not isinstance(algo, CongestionControlAlgo):
-        print(f"Unsupported congestion control algorithm: {algo}")
-        return
-
-    try:
-        subprocess.check_call(['sudo', 'modprobe', f'tcp_{algo.value}'])
-    except subprocess.CalledProcessError as e:
-        print(f"Error loading congestion control algorithm {algo.value}: {e}")
-        return
-
-    # Set allowed congestion-control list in the root namespace as a best-effort.
-    allowed_cc = "cubic reno dctcp bbr"
-    try:
-        subprocess.check_call(['sudo', 'sysctl', '-w', f'net.ipv4.tcp_allowed_congestion_control="{allowed_cc}"'])
-    except subprocess.CalledProcessError:
-        pass
