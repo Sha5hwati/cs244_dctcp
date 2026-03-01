@@ -22,7 +22,7 @@ def run_experiment(
     topology_type: TopologyType,
     sender_cca: CongestionControlAlgo,
     switch_qm: QueueManagement,
-    receiver_ack: ReceiverFeedback,
+    receiver_feedback: ReceiverFeedback,
     traffic_pattern: TrafficPattern,
 ) -> None:
     """Create a Mininet topology, apply settings, run traffic, and collect logs.
@@ -33,7 +33,7 @@ def run_experiment(
     print(
         f"Running experiment: topology={topology_type.value} "
         f"cca={sender_cca.value} qm={switch_qm.value} "
-        f"ack={receiver_ack.value} pattern={traffic_pattern.value}"
+        f"feedback={receiver_feedback.value} pattern={traffic_pattern.value}"
     )
 
     topo = MininetTopology()
@@ -48,13 +48,13 @@ def run_experiment(
 
     # Configure devices in the topology.
     print("Configuring network...")
-    configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_ack=receiver_ack)
+    configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
     print_config(net)
 
     # Generate traffic.
     print("Generating traffic...")
     log_exp = Path(
-        f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_ack.value}_{traffic_pattern.value}"
+        f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
     )
     log_exp.mkdir(parents=True, exist_ok=True)
     generate_traffic(
@@ -88,14 +88,14 @@ def print_config(net):
     print(f"Receiver {receiver.name}: tcp_ecn={fb}")
     print("------------ End of Configuration ---------------\n\n")
 
-if __name__ == '__main__':
-    setLogLevel('info')
-    # TODO: write a script to run experiment for multiple scenarios
-    # TODO: generate log directory names for different scenarios
-    run_experiment(
-        topology_type=TopologyType.DUMBBELL,
-        sender_cca=CongestionControlAlgo.DCTCP, 
-        switch_qm=QueueManagement.ECN, 
-        receiver_ack=ReceiverFeedback.IMMEDIATE_ACK, 
-        traffic_pattern=TrafficPattern.CONSTANT,
-    )
+# TODO: remove this once we finish run_multiple_scenarios.py
+# if __name__ == '__main__':
+#     setLogLevel('info')
+#     # TODO: write a script to run experiment for multiple scenarios
+#     run_experiment(
+#         topology_type=TopologyType.DUMBBELL,
+#         sender_cca=CongestionControlAlgo.DCTCP, 
+#         switch_qm=QueueManagement.ECN, 
+#         receiver_feedback=ReceiverFeedback.IMMEDIATE_ACK, 
+#         traffic_pattern=TrafficPattern.CONSTANT,
+#     )

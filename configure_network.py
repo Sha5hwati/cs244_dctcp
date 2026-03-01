@@ -1,33 +1,13 @@
 import os
 import subprocess
-from enum import Enum
-
+from parameters import CongestionControlAlgo, ReceiverFeedback, QueueManagement, SWITCH_NAME, RECEIVER_NAME
 from mininet.net import Mininet
-
-# Congestion control algorithm used by the sender.
-class CongestionControlAlgo(Enum):
-    CUBIC = 'cubic'
-    RENO = 'reno'
-    DCTCP = 'dctcp'
-    BBR = 'bbr'
-
-# Queue management scheme used at the bottleneck switch.
-class QueueManagement(Enum):
-    TAILDROP = 'taildrop'
-    RED = 'red'
-    ECN = 'ecn'
-
-# Feedback strategy used by the receiver for ACKs.
-class ReceiverFeedback(Enum):
-    DELAYED_ACK = 'delayed_ack'
-    IMMEDIATE_ACK = 'immediate_ack'
-
 
 def configure_network(
     net: Mininet,
     sender_cca: CongestionControlAlgo,
     switch_qm: QueueManagement,
-    receiver_ack: ReceiverFeedback,
+    receiver_feedback: ReceiverFeedback,
 ) -> None:
     """Configure CC algorithm, switch QM and receiver ACK strategies inside Mininet.
 
@@ -35,8 +15,8 @@ def configure_network(
     switches in Mininet.
     """
 
-    receiver = net.get("receiver")
-    print(f"Setup: CCA={sender_cca.value}, switch QM={switch_qm.value}, receiver ACK={receiver_ack.value}")
+    receiver = net.get(RECEIVER_NAME)
+    print(f"Setup: CCA={sender_cca.value}, switch QM={switch_qm.value}, receiver FEEDBACK={receiver_feedback.value}")
 
     # Configure same CCA for senders and receiver.
     # TODO: figure out if we need to configure here as well or if OS level is sufficient
@@ -88,7 +68,7 @@ def configure_network(
     # Configure receiver to either send acks immediately or delay them.
     # receiver.cmd('sudo sysctl -w net.ipv4.tcp_sack=1')
     quickack_val = 1 # default
-    if receiver_ack == ReceiverFeedback.DELAYED_ACK:
+    if receiver_feedback == ReceiverFeedback.DELAYED_ACK:
         quickack_val = 0
         receiver.cmd("sudo sysctl -w net.ipv4.tcp_delack_min=200")
         receiver.cmd("sudo sysctl -w net.ipv4.tcp_delack_max=200")

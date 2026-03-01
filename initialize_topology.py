@@ -1,24 +1,6 @@
 from mininet.topo import Topo
 from enum import Enum
-
-# --- Topology parameters ---
-BANDWIDTH_DUMBBELL = 10  # Mbps (bottleneck link)
-QUEUE_SIZE_DUMBBELL = 100
-DELAY_DUMBBELL = "20ms"
-
-BANDWIDTH_STAR = 10  # Mbps
-QUEUE_SIZE_STAR = 64
-DELAY_STAR = "1ms"
-
-# Common node names used by the experiment scripts
-SRC_NAME = "switch1"
-DST_NAME = "receiver"
-
-
-class TopologyType(Enum):
-    DUMBBELL = "dumbbell"
-    STAR = "star"
-
+from parameters import *
 
 class MininetTopology(Topo):
     """Mininet Topology class that can be populated with different topologies based on the experiment configuration.
@@ -39,8 +21,8 @@ class MininetTopology(Topo):
 
     def _dumbbell(self, num_senders: int):
         # First add a single switch and a receiver.
-        switch1 = self.addSwitch('switch1')
-        receiver = self.addHost('receiver')
+        switch1 = self.addSwitch(SWITCH_NAME)
+        receiver = self.addHost(RECEIVER_NAME)
         # For dumbbell, we need a second switch on the path.
         switch2 = self.addSwitch('switch2')
         # The bottleneck link should be between switches 1 and 2.
@@ -49,9 +31,9 @@ class MininetTopology(Topo):
         self.addLink(
             switch1,
             switch2,
-            bw=BANDWIDTH_DUMBBELL,
-            delay=DELAY_DUMBBELL,
-            max_queue_size=QUEUE_SIZE_DUMBBELL,
+            bw=DumbbellTopologyParameters.BANDWIDTH,
+            delay=DumbbellTopologyParameters.DELAY,
+            max_queue_size=DumbbellTopologyParameters.QUEUE_SIZE,
         )
         self.addLink(switch2, receiver)
         # Add the senders to the topology.
@@ -63,17 +45,17 @@ class MininetTopology(Topo):
     # TODO: expand star topology to include multiple layers.
     def _star(self, num_senders: int):
         # First add a single switch and a receiver.
-        switch1 = self.addSwitch('switch1')
-        receiver = self.addHost('receiver')
+        switch1 = self.addSwitch(SWITCH_NAME)
+        receiver = self.addHost(RECEIVER_NAME)
         # The bottleneck link should be between switch1 and the receiver.
         # We choose a smaller delay since switch and receiver should be located 
         # near each other.
         self.addLink(
             switch1,
             receiver,
-            bw=BANDWIDTH_STAR,
-            delay=DELAY_STAR,
-            max_queue_size=QUEUE_SIZE_STAR,
+            bw=StarTopologyParameters.BANDWIDTH,
+            delay=StarTopologyParameters.DELAY,
+            max_queue_size=StarTopologyParameters.QUEUE_SIZE,
         )
         # Add the senders to the topology.
         for i in range(num_senders):

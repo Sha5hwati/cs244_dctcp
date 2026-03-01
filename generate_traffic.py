@@ -1,15 +1,9 @@
 import time
 from pathlib import Path
-from enum import Enum
 
 from mininet.net import Mininet
 from mininet.log import info
-from configure_network import CongestionControlAlgo
-
-class TrafficPattern(Enum):
-    ELEPHANT_VS_MICE = 'elephant_vs_mice'
-    CONSTANT = 'constant'
-    BURSTY = 'bursty'
+from parameters import CongestionControlAlgo, TrafficPattern, RECEIVER_NAME
 
 
 def generate_traffic(
@@ -21,7 +15,7 @@ def generate_traffic(
 ) -> None:
     """Generate traffic in the Mininet topology according to the specified pattern.
     """
-    receiver = net.get('receiver')
+    receiver = net.get(RECEIVER_NAME)
     receiver_ip = receiver.IP()
 
     # Collect sender host objects
