@@ -31,9 +31,9 @@ class MininetTopology(Topo):
         self.addLink(
             switch1,
             switch2,
-            bw=DumbbellTopologyParameters.BANDWIDTH,
-            delay=DumbbellTopologyParameters.DELAY,
-            max_queue_size=DumbbellTopologyParameters.QUEUE_SIZE,
+            bw=DumbbellTopologyParameters.BANDWIDTH.value,
+            delay=DumbbellTopologyParameters.DELAY.value,
+            max_queue_size=DumbbellTopologyParameters.QUEUE_SIZE.value,
         )
         self.addLink(switch2, receiver)
         # Add the senders to the topology.
@@ -53,9 +53,9 @@ class MininetTopology(Topo):
         self.addLink(
             switch1,
             receiver,
-            bw=StarTopologyParameters.BANDWIDTH,
-            delay=StarTopologyParameters.DELAY,
-            max_queue_size=StarTopologyParameters.QUEUE_SIZE,
+            bw=StarTopologyParameters.BANDWIDTH.value,
+            delay=StarTopologyParameters.DELAY.value,
+            max_queue_size=StarTopologyParameters.QUEUE_SIZE.value,
         )
         # Add the senders to the topology.
         for i in range(num_senders):

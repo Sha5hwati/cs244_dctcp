@@ -2,7 +2,9 @@ from enum import Enum
 
 # TODO: add some description of each parameter.
 
-# Common node names used by the experiment scripts.
+# Common constants used by the experiment scripts.
+# TODO: check if we need to change this to a parameter for run_experiment
+NUM_SENDERS = 4
 SWITCH_NAME = "switch1"
 RECEIVER_NAME = "receiver"
 
@@ -46,3 +48,24 @@ class QueueManagement(Enum):
 class ReceiverFeedback(Enum):
     DELAYED_ACK = 'delayed_ack'
     IMMEDIATE_ACK = 'immediate_ack'
+
+# Metrics that will be graphed for each experiment.
+# The defined tuple of values is {key in dataframe, title in subplot}.
+class Metrics(Enum):
+    THROUGHPUT = ('throughput', 'Throughput (Mbps)'),
+    RTT = ('rtt', 'Round Trip Time (ms)')
+    CONGESTION_WINDOW = ('congestion_window', 'Congestion Window (KB)')
+    FAIRNESS = ('fairness_index', 'Fairness (Jain\'s Fairness Index)')
+
+# List of experiments that we want to run and graph.
+# Each row of the experiment table defines a scenario to run.
+# TODO: update the list of scenarios
+EXPERIMENT_TABLE = [
+    {
+        "topology": TopologyType.DUMBBELL,
+        "cca": CongestionControlAlgo.DCTCP,
+        "qm": QueueManagement.ECN,
+        "feedback": ReceiverFeedback.IMMEDIATE_ACK,
+        "traffic": TrafficPattern.CONSTANT
+    },
+]

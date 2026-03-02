@@ -19,40 +19,7 @@ def check_parameters(topology, sender_cca, switch_qm, receiver_feedback, traffic
 def main():
     setLogLevel('info')
 
-    # Each row of the experiment table defines a scenario to run.
-    # TODO: update the list of scenarios
-    experiment_table = [
-        {
-            "topology": TopologyType.DUMBBELL,
-            "cca": CongestionControlAlgo.CUBIC,
-            "qm": QueueManagement.TAILDROP,
-            "feedback": ReceiverFeedback.IMMEDIATE_ACK,
-            "traffic": TrafficPattern.CONSTANT
-        },
-        {
-            "topology": TopologyType.DUMBBELL,
-            "cca": CongestionControlAlgo.BBR,
-            "qm": QueueManagement.RED,
-            "feedback": ReceiverFeedback.DELAYED_ACK,
-            "traffic": TrafficPattern.ELEPHANT_VS_MICE
-        },
-        {
-            "topology": TopologyType.STAR,
-            "cca": CongestionControlAlgo.DCTCP,
-            "qm": QueueManagement.ECN,
-            "feedback": ReceiverFeedback.IMMEDIATE_ACK,
-            "traffic": TrafficPattern.BURSTY
-        },
-        {
-            "topology": TopologyType.STAR,
-            "cca": CongestionControlAlgo.RENO,
-            "qm":QueueManagement.TAILDROP,
-            "feedback": ReceiverFeedback.DELAYED_ACK,
-            "traffic": TrafficPattern.CONSTANT
-        }
-    ]
-
-    for scenario in experiment_table: 
+    for scenario in EXPERIMENT_TABLE: 
         topology = scenario['topology']   
         sender_cca = scenario['cca']
         switch_qm = scenario['qm']

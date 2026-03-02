@@ -14,9 +14,7 @@ from configure_network import (
     QueueManagement,
     ReceiverFeedback,
 )
-
-# TODO: check if we need to change this to a parameter for run_experiment
-NUM_SENDERS = 4
+from parameters import NUM_SENDERS
 
 def run_experiment(
     topology_type: TopologyType,
@@ -87,15 +85,3 @@ def print_config(net):
     fb = receiver.cmd("sysctl -n net.ipv4.tcp_ecn").strip()
     print(f"Receiver {receiver.name}: tcp_ecn={fb}")
     print("------------ End of Configuration ---------------\n\n")
-
-# TODO: remove this once we finish run_multiple_scenarios.py
-# if __name__ == '__main__':
-#     setLogLevel('info')
-#     # TODO: write a script to run experiment for multiple scenarios
-#     run_experiment(
-#         topology_type=TopologyType.DUMBBELL,
-#         sender_cca=CongestionControlAlgo.DCTCP, 
-#         switch_qm=QueueManagement.ECN, 
-#         receiver_feedback=ReceiverFeedback.IMMEDIATE_ACK, 
-#         traffic_pattern=TrafficPattern.CONSTANT,
-#     )
