@@ -51,16 +51,16 @@ def run_experiment(
 
     # Generate traffic.
     print("Generating traffic...")
-    log_exp = Path(
+    log_dir = Path(
         f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
     )
-    log_exp.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
     generate_traffic(
         net,
         traffic_pattern=traffic_pattern,
         num_senders=NUM_SENDERS,
         sender_cca=sender_cca,
-        log_directory=str(log_exp),
+        log_directory=str(log_dir),
     )
     print_config(net)
 
@@ -69,7 +69,8 @@ def run_experiment(
     net.stop()
     # Cleanup Mininet state.
     subprocess.run(["sudo", "mn", "-c"], check=False)
-    info(f"Experiment {log_exp} Complete\n")
+    subprocess.run(["sudo", "pkill", "-9", "ovs-testcontrol"])
+    info(f"\nExperiment {log_dir} Complete\n")
 
 def print_config(net):
     print("\n\n------------ Mininet Network Configuration ------------")

@@ -27,8 +27,8 @@ def generate_graphs(json_directory):
             if metric == Metrics.FAIRNESS:
                 # Fairness is aggregated across all flows, so plot separately.
                 continue
-            axes[i].plot(data['time'], data[metric.value[1]], label=label, alpha=1.0)
-            axes[i].set_ylabel(metric.value[2])
+            axes[i].plot(data['time'], data[metric.value[0]], label=label, alpha=1.0)
+            axes[i].set_ylabel(metric.value[1])
             # TODO: play around with style
             axes[i].grid(True, linestyle='--',alpha=0.5)
             i += 1
@@ -37,8 +37,8 @@ def generate_graphs(json_directory):
     fairness_data = calculate_fairness(list(flow_data.values()))
     # TODO: play around with style
     # We use post because the fairness index is calculated at the end of an interval.
-    axes[3].step(fairness_data['time'], fairness_data[Metrics.FAIRNESS.value[1]], where='post', color='black', lw=2)
-    axes[3].set_ylabel(Metrics.FAIRNESS.value[2])
+    axes[3].step(fairness_data['time'], fairness_data[Metrics.FAIRNESS.value[0]], where='post', color='black', lw=2)
+    axes[3].set_ylabel(Metrics.FAIRNESS.value[1])
     axes[3].set_ylim(0, 1.1)
     axes[3].grid(True, linestyle='--', alpha=0.5)
 

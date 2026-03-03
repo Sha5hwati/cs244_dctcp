@@ -41,5 +41,7 @@ def main():
         )
 
 if __name__ == '__main__':
+    # Start in clean state.
     os.system('sudo mn -c')
+    os.system('sudo pkill -9 ovs-testcontrol')
     main()

@@ -52,7 +52,7 @@ class ReceiverFeedback(Enum):
 # Metrics that will be graphed for each experiment.
 # The defined tuple of values is {key in dataframe, title in subplot}.
 class Metrics(Enum):
-    THROUGHPUT = ('throughput', 'Throughput (Mbps)'),
+    THROUGHPUT = ('throughput', 'Throughput (Mbps)')
     RTT = ('rtt', 'Round Trip Time (ms)')
     CONGESTION_WINDOW = ('congestion_window', 'Congestion Window (KB)')
     FAIRNESS = ('fairness_index', 'Fairness (Jain\'s Fairness Index)')
