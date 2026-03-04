@@ -47,19 +47,25 @@ def configure_network(
     # to avoid assumptions about eth indexes (e.g., avoid hardcoding "-eth1").
     for switch in net.switches:
         for intf in switch.intfList():
-            # Remove any existing root qdisc (ignore errors)
-            switch.cmd(f"sudo tc qdisc del dev {intf.name} root 2>/dev/null || true")
+            if intf.name == 'lo':
+                continue
+            if RECEIVER_NAME not in intf.link.intf1.name and RECEIVER_NAME not in intf.link.intf2.name:
+                continue
+            # # Remove any existing root qdisc (ignore errors)
+            # switch.cmd(f"sudo tc qdisc del dev {intf.name} root 2>/dev/null || true")
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
-                switch.cmd(f"sudo tc qdisc add dev {intf.name} root pfifo limit 100")
+                switch.cmd(f"sudo tc qdisc replace dev {intf.name} parent 1:1 handle 10: pfifo limit 100")
             elif switch_qm == QueueManagement.RED:
                 # Start dropping packets at 15kb with 10% chance, drop all packets after 20kb. We keep the range small
                 # for now to ensure we get bottlenecked, but might make it larger later.
-                switch.cmd(f'sudo tc qdisc add dev {intf.name} root red limit 1mb min 15kb max 20kb avpkt 1500 burst 20 probability 0.1')
+                switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 1:1 handle 10: red limit 1mb min 15kb '
+                           'max 20kb avpkt 1500 burst 20 probability 0.1')
             elif switch_qm == QueueManagement.ECN:
                 # ECN will mark packets over the min threshold instead of dropping them.
-                switch.cmd(f'sudo tc qdisc add dev {intf.name} root 1:10 handle 20: red limit 1mb min 15kb max 20kb avpkt 1500 burst 20 probability 1.0 ecn')
+                switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 1:1 handle 10: red limit 1mb min 15kb '
+                           'max 20kb avpkt 1500 burst 20 probability 1.0 ecn')
         print(f"Configured switch {switch.name} with queue management scheme {switch_qm.value}")
 
     if sender_cca == CongestionControlAlgo.DCTCP:

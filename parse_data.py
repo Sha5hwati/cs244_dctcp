@@ -23,7 +23,9 @@ def calculate_jains_fairness_index(data):
     """Use Jain's fairness index as measure of fairness."""
     # First drop any flows that are not sending data at this time point.
     cleaned_data = data.dropna()
-    if cleaned_data.empty: return 1.0
+    # Default to 1.0 if no data or all throughputs are zero.
+    if cleaned_data.empty or (cleaned_data**2).sum() == 0: 
+        return 1.0
     n = len(cleaned_data)
     # Jain's fairness index = (sum(x)^2) / (n * sum(x^2))
     return (cleaned_data.sum()**2) / (n * (cleaned_data**2).sum())
