@@ -34,6 +34,11 @@ def configure_network(
         host.cmd(f"sudo sysctl -w net.ipv4.tcp_congestion_control={sender_cca.value}")
         print(f"Configured {host.name} with congestion control algorithm {sender_cca.value}")
 
+        # Disable GRO/LRO so the kernel sees every individual ACK
+        host.cmd(f"ethtool -K {host.name}-eth0 gro off lro off")
+        # Enable FQ Pacing to smooth out packet transitions
+        host.cmd(f"tc qdisc add dev {host.name}-eth0 root fq pacing")
+
         if sender_cca == CongestionControlAlgo.DCTCP:
             # Enable ECN and disable fallback to loss-based behavior for DCTCP experiments.
             host.cmd("sudo sysctl -w net.ipv4.tcp_ecn=1")
@@ -49,10 +54,8 @@ def configure_network(
         for intf in switch.intfList():
             if intf.name == 'lo':
                 continue
-            if RECEIVER_NAME not in intf.link.intf1.name and RECEIVER_NAME not in intf.link.intf2.name:
+            if RECEIVER_NAME not in intf.name and "switch2" not in intf.name:
                 continue
-            # # Remove any existing root qdisc (ignore errors)
-            # switch.cmd(f"sudo tc qdisc del dev {intf.name} root 2>/dev/null || true")
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
@@ -64,8 +67,8 @@ def configure_network(
                            'max 20kb avpkt 1500 burst 20 probability 0.1')
             elif switch_qm == QueueManagement.ECN:
                 # ECN will mark packets over the min threshold instead of dropping them.
-                switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 1:1 handle 10: red limit 1mb min 15kb '
-                           'max 20kb avpkt 1500 burst 20 probability 1.0 ecn')
+                switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 1:1 handle 10: red limit 1mb min 30kb '
+                           'max 90kb avpkt 1500 burst 20 probability 1.0 ecn')
         print(f"Configured switch {switch.name} with queue management scheme {switch_qm.value}")
 
     if sender_cca == CongestionControlAlgo.DCTCP:

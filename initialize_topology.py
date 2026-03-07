@@ -40,7 +40,8 @@ class MininetTopology(Topo):
         for i in range(num_senders):
             sender = self.addHost(f'sender{i+1}')
             # All senders route traffic to switch1.
-            self.addLink(sender, switch1)
+            # Make sure sender-switch links are not bottleneck.
+            self.addLink(sender, switch1, bw=(DumbbellTopologyParameters.BANDWIDTH.value * 2))
             
     # TODO: expand star topology to include multiple layers.
     def _star(self, num_senders: int):
@@ -61,5 +62,5 @@ class MininetTopology(Topo):
         for i in range(num_senders):
             sender = self.addHost(f'sender{i+1}')
             # All senders route traffic to switch1.
-            self.addLink(sender, switch1, bw=100)
+            self.addLink(sender, switch1, bw=(StarTopologyParameters.BANDWIDTH.value * 2))
         

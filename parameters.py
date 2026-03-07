@@ -18,12 +18,16 @@ class DumbbellTopologyParameters(Enum):
     BANDWIDTH = 10  # Mbps (bottleneck link)
     QUEUE_SIZE = 100
     DELAY = "20ms"
+    LOSS = 0
+    JITTER = "0ms"
 
 # Star-specific topology parameters.
 class StarTopologyParameters(Enum):
     BANDWIDTH = 10  # Mbps
-    QUEUE_SIZE = 64
+    QUEUE_SIZE = 100
     DELAY = "1ms"
+    LOSS = 0
+    JITTER = "0ms"
 
 # Possible traffic patterns.
 class TrafficPattern(Enum):

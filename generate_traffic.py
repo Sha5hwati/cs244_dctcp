@@ -40,11 +40,11 @@ def generate_traffic(
         )
         time.sleep(2)
 
-        # Other senders produce short 'mouse' transfers (10M)
+        # Other senders produce short 'mouse' transfers (5M)
         for idx, s in enumerate(senders[1:], start=1):
             port = 5001 + idx
             s.cmd(
-                f"sudo iperf3 -c {receiver_ip} -p {port} -n 10M -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/mouse_{idx-1}.json &"
+                f"sudo iperf3 -c {receiver_ip} -p {port} -n 5M -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/mouse_{idx-1}.json &"
             )
 
     elif traffic_pattern == TrafficPattern.CONSTANT:
