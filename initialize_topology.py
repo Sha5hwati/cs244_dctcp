@@ -1,5 +1,4 @@
 from mininet.topo import Topo
-from enum import Enum
 from parameters import *
 
 class MininetTopology(Topo):
@@ -63,4 +62,5 @@ class MininetTopology(Topo):
             sender = self.addHost(f'sender{i+1}')
             # All senders route traffic to switch1.
             self.addLink(sender, switch1, bw=(StarTopologyParameters.BANDWIDTH.value * 2))
-        
+
+

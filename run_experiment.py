@@ -9,6 +9,7 @@ from mininet.log import setLogLevel, info
 from initialize_topology import MininetTopology, TopologyType
 from configure_network import configure_network
 from generate_traffic import generate_traffic, TrafficPattern
+from visualize_network import visualize_mininet
 from configure_network import (
     CongestionControlAlgo,
     QueueManagement,
@@ -49,17 +50,21 @@ def run_experiment(
     configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
     print_config(net)
 
-    # Generate traffic.
-    print("Generating traffic...")
+    # Save experiment data
     log_dir = Path(
         f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
     )
     log_dir.mkdir(parents=True, exist_ok=True)
+
+    print("Visualizing topology...")
+    visualize_mininet(net, log_dir)
+    
+    print("Generating traffic...")
     generate_traffic(
         net,
         traffic_pattern=traffic_pattern,
         num_senders=NUM_SENDERS,
-        sender_cca=sender_cca,
+        sender_ccas=sender_cca,
         log_directory=str(log_dir),
     )
     print_config(net)
@@ -79,7 +84,7 @@ def print_config(net):
         print(f"Host {host.name}: {algo}")
 
     for switch in net.switches:
-        qm = switch.cmd("sudo tc qdisc show").strip()
+        qm = switch.cmd("sudo tc -s -d qdisc show").strip()
         print(f"Switch {switch.name}: {qm}")
 
     receiver = net.get("receiver")
