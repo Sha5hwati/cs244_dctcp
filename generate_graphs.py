@@ -13,7 +13,18 @@ def generate_graphs(json_directory):
 
     # Get all json files in the given directory and label each flow by filename (without .json).
     json_files = list(path.glob("*.json"))
-    flow_data = {f.stem: parse_json(f) for f in json_files}
+    raw_flows = {f.stem: parse_json(f) for f in json_files}
+    
+    # Find the global start time (the earliest 'abs_start' among all files)
+    global_start = min(df['abs_start'].iloc[0] for df in raw_flows.values())
+    
+    # Align the time axis for every flow
+    flow_data = {}
+    for label, df in raw_flows.items():
+        # Calculate the offset (e.g., if this started 5s after the elephant)
+        offset = df['abs_start'].iloc[0] - global_start
+        df['time'] = df['time'] + offset
+        flow_data[label] = df
     
     # Initialize plot.
     # TODO: adjust visualization parameters as needed

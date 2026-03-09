@@ -64,7 +64,7 @@ def run_experiment(
         net,
         traffic_pattern=traffic_pattern,
         num_senders=NUM_SENDERS,
-        sender_ccas=sender_cca,
+        sender_cca=sender_cca,
         log_directory=str(log_dir),
     )
     print_config(net)

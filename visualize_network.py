@@ -19,7 +19,7 @@ def host_tcp_config(host: Host) -> str:
 
 def switch_config(switch: Switch) -> str:
     """HTCP config for a switch"""
-    raw_tc = switch.cmd('sudo tc -s -d qdisc show')
+    raw_tc = switch.cmd('sudo tc qdisc show')
     # interface_name -> config map
     iface_configs = {}
     # interesting switch parameters

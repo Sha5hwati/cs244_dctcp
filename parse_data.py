@@ -1,21 +1,24 @@
 import json
 import pandas as pd
 
-def parse_json(file) -> pd.DataFrame:
-    """Convert iperf3 json file into Pandas dataframe for easier analysis."""
+def parse_json(file):
+    """Convert iperf3 json file into Pandas dataframe with absolute timestamping."""
     with open(file, 'r') as f:
         iperf_data = json.load(f)
     
+    # Extract the absolute start time of this specific iperf execution
+    start_time_abs = iperf_data['start']['timestamp']['timesecs']
+    
     data = []
     for interval in iperf_data.get('intervals', []):
-        # Use the first stream for cwnd and rtt.
-        # Throughput is in Mbps, cwnd is in KB, RTT is in ms
         stream = interval['streams'][0]
         data.append({
+            # 'time' is currently relative to this file's start
             'time': interval['sum']['start'],
             'throughput': interval['sum']['bits_per_second'] / 1e6,
             'congestion_window': stream.get('snd_cwnd', 0) / 1024,
-            'rtt': stream.get('rtt', 0) / 1000
+            'rtt': stream.get('rtt', 0) / 1000,
+            'abs_start': start_time_abs  # Store this for global alignment
         })
     return pd.DataFrame(data)
 
