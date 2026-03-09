@@ -61,15 +61,20 @@ def configure_network(
 
             # ECN will mark packets over the min threshold instead of dropping them.
             print(f"--- Attempting to configure ECN on {intf.name} with QM {switch_qm.value}")
+              
             # 1. Clear everything for the interface.
             cmd = switch.cmd(f"sudo tc qdisc del dev {intf.name} root")
             if cmd.strip():
                 print(f"Warning: Could not clear qdisc on {intf.name} (might be already clear): {cmd.strip()}")
             
+            # Add HTB structure
+            cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
+            cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
+              
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
-                cmd = switch.cmd(f"sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: pfifo limit 100")
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: pfifo limit 100")
                 
                 if cmd.strip():
                     print(f"--- Error: could not configure TAILDROP on {intf.name}: {cmd.strip()}")
@@ -86,7 +91,7 @@ def configure_network(
                 # Start dropping packets at 15kb with 10% chance, drop all packets after 20kb. We keep the range small
                 # for now to ensure we get bottlenecked, but might make it larger later.
                 cmd3 = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: red limit 1mb min 15kb '
-                           'max 20kb avpkt 1500 burst 20 probability 0.1')
+                           'max 20kb avpkt 1500 burst 20 probability 0.1 bandwidth 1000Mbit")')
                 
                 # Check if command succeeded and print any errors to console. 
                 for cmd in [cmd1, cmd2, cmd3]:
@@ -95,10 +100,7 @@ def configure_network(
 
             elif switch_qm == QueueManagement.ECN:
                 
-                # Add HTB structure
-                cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
-                cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
-                    
+                 
                 # Setup ECN marking with RED parameters. 
                 # We use a small range for min and max thresholds to ensure we get bottlenecked and see ECN in action.
                 cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: red "
