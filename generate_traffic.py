@@ -32,6 +32,12 @@ def generate_traffic(
 
     log_dir = Path(log_directory)
     log_dir.mkdir(parents=True, exist_ok=True)
+    
+    info("Starting background noise (2Mbps)...\n")
+    for idx, s in enumerate(senders):
+        noise_port = 7000 + idx
+        receiver.cmd(f"sudo iperf3 -s -p {noise_port} -D")
+        s.cmd(f"iperf3 -c {receiver_ip} -p {noise_port} -u -b 2M -t 100 &")
 
     if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
         # One long-lived elephant flow. The elephant flow is at the max bandwidth.

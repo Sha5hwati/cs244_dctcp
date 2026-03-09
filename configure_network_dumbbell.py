@@ -83,9 +83,9 @@ def configure_network_dumbbell(
             if intf.name == 'switch1-eth1' or intf.name == 'switch2-eth1':
                 print(f"--- Configuring bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 10ms")
                 cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 10ms")
-            elif 'switch1' in intf.name:
-                print(f"--- Configuring non-bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 2ms")
-                cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 2ms")
+            # elif 'switch1' in intf.name:
+            #     print(f"--- Configuring non-bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 2ms")
+            #     cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 2ms")
             
             for cmd in [cmd, cmd1, cmd2, cmd3]:
                 if cmd.strip():

@@ -63,7 +63,7 @@ def run_experiment(
     # Save experiment data
     distinct_ccas = sorted(list(set(sender_cca.values())))
     log_dir = Path(
-        f"data/{topology_type.value}_{'_'.join(distinct_ccas)}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_access_delay"
+        f"data/{topology_type.value}_{'_'.join(distinct_ccas)}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_noise"
     )
     log_dir.mkdir(parents=True, exist_ok=True)
 
