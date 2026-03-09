@@ -28,7 +28,7 @@ def generate_graphs(json_directory):
     
     # Initialize plot.
     # TODO: adjust visualization parameters as needed
-    figure, axes = plt.subplots(4, 1, figsize=(10, 16), sharex=True)
+    figure, axes = plt.subplots(5, 1, figsize=(10, 16), sharex=True)
     plt.subplots_adjust(hspace=0.3)
     
     # Plot each flow-specific metric in individual subplots.
@@ -48,13 +48,13 @@ def generate_graphs(json_directory):
     fairness_data = calculate_fairness(list(flow_data.values()))
     # TODO: play around with style
     # We use post because the fairness index is calculated at the end of an interval.
-    axes[3].step(fairness_data['time'], fairness_data[Metrics.FAIRNESS.value[0]], where='post', color='black', lw=2)
-    axes[3].set_ylabel(Metrics.FAIRNESS.value[1])
-    axes[3].set_ylim(0, 1.1)
-    axes[3].grid(True, linestyle='--', alpha=0.5)
+    axes[4].step(fairness_data['time'], fairness_data[Metrics.FAIRNESS.value[0]], where='post', color='black', lw=2)
+    axes[4].set_ylabel(Metrics.FAIRNESS.value[1])
+    axes[4].set_ylim(0, 1.1)
+    axes[4].grid(True, linestyle='--', alpha=0.5)
 
     axes[0].set_title(f"Scenario Graphs: {path.name}")
-    axes[3].set_xlabel("Time (s)")
+    axes[4].set_xlabel("Time (s)")
     axes[0].legend(loc='upper right', bbox_to_anchor=(1.15, 1))
 
     save_path = path / "scenario_graphs.png"

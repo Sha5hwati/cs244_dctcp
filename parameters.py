@@ -4,7 +4,7 @@ from enum import Enum
 
 # Common constants used by the experiment scripts.
 # TODO: check if we need to change this to a parameter for run_experiment
-NUM_SENDERS = 4
+NUM_SENDERS = 6
 SWITCH_NAME = "switch1"
 RECEIVER_NAME = "receiver"
 
@@ -60,6 +60,7 @@ class Metrics(Enum):
     RTT = ('rtt', 'Round Trip Time (ms)')
     CONGESTION_WINDOW = ('congestion_window', 'Congestion Window (KB)')
     FAIRNESS = ('fairness_index', 'Fairness (Jain\'s Fairness Index)')
+    RETRANSMITS = ('retransmits', 'Retransmissions (count)')
 
 # List of experiments that we want to run and graph.
 # Each row of the experiment table defines a scenario to run.

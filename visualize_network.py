@@ -29,7 +29,7 @@ def switch_config(switch: Switch) -> str:
     raw_tc_class = switch.cmd('sudo ovs-vsctl list qos')
     print(f"Raw tc class output for {switch.name}:\n{raw_tc_class}\n")
 
-    # 1. Parse Bandwidth from HTB Classes
+    #   Parse Bandwidth from HTB Classes
     for line in raw_tc_class.split('\n'):
         print(f"Parsing class line: {line}")
         if 'htb' in line and 'rate' in line:
@@ -59,14 +59,14 @@ def switch_config(switch: Switch) -> str:
         if 'red' in line:
             params = {p: parts[i+1] for i, p in enumerate(parts) if p in interesting_red_params}
             config_str = f"RED(min:{params.get('min','?')}, max:{params.get('max','?')}, prob:{params.get('probability','?')})"
-            if 'ecn' in params:
+            if 'ecn' in line:
                 config_str += " ecn: 1"
             else:
                 config_str += " ecn: 0"
 
         elif 'pfifo' in line:
             params = {p: parts[i+1] for i, p in enumerate(parts) if p in interesting_pfifo_params}
-            config_str = f"TailDrop(lim:{params.get('limit','?')})"
+            config_str = f"TailDrop(buffer:{params.get('limit','?')})"
 
         if config_str:
             iface_configs[iface_name] = iface_configs.get(iface_name, "") + " " + config_str

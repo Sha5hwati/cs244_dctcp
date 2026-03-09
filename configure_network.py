@@ -56,21 +56,18 @@ def configure_network(
         for intf in switch.intfList():
             if intf.name == 'lo':
                 continue
-            # if RECEIVER_NAME not in intf.name and "switch2" not in intf.name:
-            #     continue
 
             # ECN will mark packets over the min threshold instead of dropping them.
             print(f"--- Attempting to configure ECN on {intf.name} with QM {switch_qm.value}")
               
-            # 1. Clear everything for the interface.
+            # Clear everything for the interface.
             cmd = switch.cmd(f"sudo tc qdisc del dev {intf.name} root")
-            if cmd.strip():
-                print(f"Warning: Could not clear qdisc on {intf.name} (might be already clear): {cmd.strip()}")
-            
-            # Add HTB structure
+            # Add HTB structure with 1000Mbit bandwidth to ensure we can fully utilize the link
             cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
             cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
-              
+            for cmd in [cmd, cmd1, cmd2]:
+                if cmd.strip():
+                    print(f"--- Error: could not configure root qdisc on {intf.name}: {cmd.strip()}")
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
@@ -79,37 +76,28 @@ def configure_network(
                 if cmd.strip():
                     print(f"--- Error: could not configure TAILDROP on {intf.name}: {cmd.strip()}")
             
-            # Create a HTB root qdisc to allow for more complex queue management schemes. 
-            # This is needed for both RED and ECN. For TailDrop, we can skip this and directly 
-            # add pfifo which is the default.
             elif switch_qm == QueueManagement.RED:
-
-                # Add HTB structure
-                cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
-                cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
                 
                 # Start dropping packets at 15kb with 10% chance, drop all packets after 20kb. We keep the range small
                 # for now to ensure we get bottlenecked, but might make it larger later.
-                cmd3 = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: red limit 1mb min 15kb '
+                cmd = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: red limit 1mb min 15kb '
                            'max 20kb avpkt 1500 burst 20 probability 0.1 bandwidth 1000Mbit")')
                 
                 # Check if command succeeded and print any errors to console. 
-                for cmd in [cmd1, cmd2, cmd3]:
-                    if cmd.strip():
-                        print(f"--- Error: could not configure RED on {intf.name}: {cmd.strip()}")
+                if cmd.strip():
+                    print(f"--- Error: could not configure RED on {intf.name}: {cmd.strip()}")
 
             elif switch_qm == QueueManagement.ECN:
                 
                  
                 # Setup ECN marking with RED parameters. 
                 # We use a small range for min and max thresholds to ensure we get bottlenecked and see ECN in action.
-                cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: red "
-                                "limit 1mb min 30kb max 90kb avpkt 1500 burst 25 probability 1.0 ecn bandwidth 1000Mbit")
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: red "
+                                f"limit 1mb min 30kb max 90kb avpkt 1500 burst 25 probability 1.0 ecn bandwidth 1000Mbit")
                 
                 # Check if command succeeded and print any errors to console. 
-                for cmd in [cmd1, cmd2, cmd3]:
-                    if cmd.strip():
-                        print(f"--- Error: could not configure ECN on {intf.name}: {cmd.strip()}")
+                if cmd.strip():
+                    print(f"--- Error: could not configure ECN on {intf.name}: {cmd.strip()}")
 
         print(f"Configured switch {switch.name} with queue management scheme {switch_qm.value}")
 

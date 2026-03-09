@@ -18,7 +18,8 @@ def parse_json(file):
             'throughput': interval['sum']['bits_per_second'] / 1e6,
             'congestion_window': stream.get('snd_cwnd', 0) / 1024,
             'rtt': stream.get('rtt', 0) / 1000,
-            'abs_start': start_time_abs  # Store this for global alignment
+            'abs_start': start_time_abs,  # Store this for global alignment
+            'retransmits': interval['sum'].get('retransmits', 0),
         })
     return pd.DataFrame(data)
 
