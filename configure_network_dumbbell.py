@@ -83,6 +83,9 @@ def configure_network_dumbbell(
             if intf.name == 'switch1-eth1' or intf.name == 'switch2-eth1':
                 print(f"--- Configuring bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 10ms")
                 cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 10ms")
+            elif 'switch1' in intf.name:
+                print(f"--- Configuring non-bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 2ms")
+                cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 2ms")
             
             for cmd in [cmd, cmd1, cmd2, cmd3]:
                 if cmd.strip():
@@ -90,7 +93,7 @@ def configure_network_dumbbell(
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
-                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 10: handle 20: pfifo limit 100")
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 10: handle 20: pfifo limit 200")
                 
                 if cmd.strip():
                     print(f"--- Error: could not configure TAILDROP on {intf.name}: {cmd.strip()}")

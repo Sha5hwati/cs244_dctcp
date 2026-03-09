@@ -49,11 +49,12 @@ def run_experiment(
     # Configure devices in the topology.
     print("Configuring network...")
     if topology_type == TopologyType.DUMBBELL:
-        if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
-            sender_cca = { "sender1": sender_cca.value}
-            sender_cca.update({f"sender{i+1}": CongestionControlAlgo.CUBIC.value for i in range(1, NUM_SENDERS)})
-        else:
-            sender_cca = {f"sender{i+1}": sender_cca.value for i in range(NUM_SENDERS)}
+        # if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
+        #     sender_cca = { "sender1": sender_cca.value}
+        #     sender_cca.update({f"sender{i+1}": CongestionControlAlgo.CUBIC.value for i in range(1, NUM_SENDERS)})
+        # else:
+        #     sender_cca = {f"sender{i+1}": sender_cca.value for i in range(NUM_SENDERS)}
+        sender_cca = {f"sender{i+1}": sender_cca.value for i in range(NUM_SENDERS)}
         configure_network_dumbbell(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
     else:
         configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
@@ -62,7 +63,7 @@ def run_experiment(
     # Save experiment data
     distinct_ccas = sorted(list(set(sender_cca.values())))
     log_dir = Path(
-        f"data/{topology_type.value}_{'_'.join(distinct_ccas)}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+        f"data/{topology_type.value}_{'_'.join(distinct_ccas)}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_access_delay"
     )
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -74,7 +75,7 @@ def run_experiment(
         net,
         traffic_pattern=traffic_pattern,
         num_senders=NUM_SENDERS,
-        sender_cca=sender_cca,
+        sender_cca=sender_cca[f"sender1"],  # Assuming all senders use the same CCA for simplicity
         log_directory=str(log_dir),
     )
     print_config(net)

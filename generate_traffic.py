@@ -36,15 +36,16 @@ def generate_traffic(
     if traffic_pattern == TrafficPattern.ELEPHANT_VS_MICE:
         # One long-lived elephant flow. The elephant flow is at the max bandwidth.
         senders[0].cmd(
-            f"sudo iperf3 -c {receiver_ip} -p 5001 -t 15 -C dctcp -i 0.1 -J --logfile {log_dir}/elephant.json &"
+            f"sudo iperf3 -c {receiver_ip} -p 5001 --cport 6001 -t 15 -C {sender_cca} -i 0.1 -J --logfile {log_dir}/elephant.json &"
         )
         time.sleep(2)
 
         # Other senders produce short 'mouse' transfers
         for idx, s in enumerate(senders[1:], start=1):
             port = 5001 + idx
+            cport = 6001 + idx
             s.cmd(
-                f"sudo iperf3 -c {receiver_ip} -p {port} -C cubic -i 0.1 -J --logfile {log_dir}/mouse_{idx-1}.json &"
+                f"sudo iperf3 -c {receiver_ip} -p {port} --cport {cport} -n 50M -C {sender_cca} -i 0.1 -J --logfile {log_dir}/mouse_{idx-1}.json &"
             )
             time.sleep(2)
 
@@ -52,16 +53,18 @@ def generate_traffic(
         # Each sender streams at 5 Mbps for 15s
         for idx, s in enumerate(senders):
             port = 5001 + idx
+            cport = 6000 + idx
             s.cmd(
-                f"sudo iperf3 -c {receiver_ip} -p {port} -t 15 -b 5M -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/sender{idx+1}.json &"
+                f"sudo iperf3 -c {receiver_ip} -p {port} --cport {cport} -t 15 -b 5M -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/sender{idx+1}.json &"
             )
 
     elif traffic_pattern == TrafficPattern.BURSTY:
         # Bursty pattern: 2 Mbps in bursts (tunable)
         for idx, s in enumerate(senders):
             port = 5001 + idx
+            cport = 6000 + idx
             s.cmd(
-                f"sudo iperf3 -c {receiver_ip} -p {port} -t 15 -b 2M/20 -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/sender{idx+1}.json &"
+                f"sudo iperf3 -c {receiver_ip} -p {port} --cport {cport} -t 15 -b 2M/20 -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/sender{idx+1}.json &"
             )
 
     # Allow flows to finish
