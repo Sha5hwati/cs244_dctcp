@@ -2,7 +2,7 @@ import subprocess
 from parameters import CongestionControlAlgo, ReceiverFeedback, QueueManagement, SWITCH_NAME, RECEIVER_NAME
 from mininet.net import Mininet
 
-def configure_network(
+def configure_network_dumbbell(
     net: Mininet,
     sender_cca: CongestionControlAlgo,
     switch_qm: QueueManagement,
@@ -56,8 +56,6 @@ def configure_network(
 
     # Configure switch QM on all switch interfaces. We iterate interfaces explicitly
     # to avoid assumptions about eth indexes (e.g., avoid hardcoding "-eth1").
-    
-    # TODO: This only works for star topology. Create configure_network_dumbbell.py for dumbbell.
     for switch in net.switches:
         print(f"Configuring switch {switch.name} with queue management scheme {switch_qm.value}...")
         for intf in switch.intfList():
@@ -72,13 +70,19 @@ def configure_network(
             # Add HTB structure with 1000Mbit bandwidth to ensure we can fully utilize the link
             cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
             cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
-            for cmd in [cmd, cmd1, cmd2]:
+            
+            cmd3 = ""
+            if intf.name == 'switch1-eth1' or intf.name == 'switch2-eth1':
+                print(f"--- Configuring bottleneck interface {intf.name} with bandwidth 1000Mbit and delay 10ms")
+                cmd3 = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay 10ms")
+            
+            for cmd in [cmd, cmd1, cmd2, cmd3]:
                 if cmd.strip():
                     print(f"--- Error: could not configure root qdisc on {intf.name}: {cmd.strip()}")
 
             if switch_qm == QueueManagement.TAILDROP:
                 # Limit the queue length to 100 packets.
-                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: pfifo limit 100")
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 10: handle 20: pfifo limit 100")
                 
                 if cmd.strip():
                     print(f"--- Error: could not configure TAILDROP on {intf.name}: {cmd.strip()}")
@@ -87,7 +91,7 @@ def configure_network(
                 
                 # Start dropping packets at 15kb with 10% chance, drop all packets after 20kb. We keep the range small
                 # for now to ensure we get bottlenecked, but might make it larger later.
-                cmd = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: red limit 1mb min 15kb '
+                cmd = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 10: handle 20: red limit 1mb min 15kb '
                            'max 20kb avpkt 1500 burst 20 probability 0.1 bandwidth 1000Mbit")')
                 
                 # Check if command succeeded and print any errors to console. 

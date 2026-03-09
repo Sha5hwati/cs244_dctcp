@@ -4,7 +4,7 @@ from enum import Enum
 
 # Common constants used by the experiment scripts.
 # TODO: check if we need to change this to a parameter for run_experiment
-NUM_SENDERS = 6
+NUM_SENDERS = 4
 SWITCH_NAME = "switch1"
 RECEIVER_NAME = "receiver"
 
@@ -17,7 +17,7 @@ class TopologyType(Enum):
 class DumbbellTopologyParameters(Enum):
     BANDWIDTH = 10  # Mbps (bottleneck link)
     QUEUE_SIZE = 100
-    DELAY = "20ms"
+    DELAY = "100ms"
     LOSS = 0
     JITTER = "0ms"
 

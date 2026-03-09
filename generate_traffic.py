@@ -46,8 +46,7 @@ def generate_traffic(
             s.cmd(
                 f"sudo iperf3 -c {receiver_ip} -p {port} -n 20M -C {sender_cca.value} -i 0.1 -J --logfile {log_dir}/mouse_{idx-1}.json &"
             )
-        
-        # time.sleep(2)
+            time.sleep(2)
 
     elif traffic_pattern == TrafficPattern.CONSTANT:
         # Each sender streams at 5 Mbps for 15s

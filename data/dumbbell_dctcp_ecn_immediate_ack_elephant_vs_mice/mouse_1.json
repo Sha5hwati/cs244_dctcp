@@ -1,0 +1,176 @@
+{
+	"start":	{
+		"connected":	[{
+				"socket":	6,
+				"local_host":	"10.0.0.4",
+				"local_port":	49460,
+				"remote_host":	"10.0.0.1",
+				"remote_port":	5003
+			}],
+		"version":	"iperf 3.12",
+		"system_info":	"Linux cs244c-vm 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64",
+		"timestamp":	{
+			"time":	"Mon, 09 Mar 2026 04:11:54 GMT",
+			"timesecs":	1773029514
+		},
+		"connecting_to":	{
+			"host":	"10.0.0.1",
+			"port":	5003
+		},
+		"cookie":	"cm7buzjc7uzxpgadwchaveup4x2ux7fssdto",
+		"tcp_mss_default":	1448,
+		"target_bitrate":	0,
+		"sock_bufsize":	0,
+		"sndbuf_actual":	87380,
+		"rcvbuf_actual":	87380,
+		"test_start":	{
+			"protocol":	"TCP",
+			"num_streams":	1,
+			"blksize":	131072,
+			"omit":	0,
+			"duration":	0,
+			"bytes":	20971520,
+			"blocks":	0,
+			"reverse":	0,
+			"tos":	0,
+			"target_bitrate":	0
+		}
+	},
+	"intervals":	[{
+			"streams":	[{
+					"socket":	6,
+					"start":	0,
+					"end":	0.100096,
+					"seconds":	0.10009600222110748,
+					"bytes":	822464,
+					"bits_per_second":	65734013.886645719,
+					"retransmits":	0,
+					"snd_cwnd":	231680,
+					"snd_wnd":	395264,
+					"rtt":	20496,
+					"rttvar":	142,
+					"pmtu":	1500,
+					"omitted":	false,
+					"sender":	true
+				}],
+			"sum":	{
+				"start":	0,
+				"end":	0.100096,
+				"seconds":	0.10009600222110748,
+				"bytes":	822464,
+				"bits_per_second":	65734013.886645719,
+				"retransmits":	0,
+				"omitted":	false,
+				"sender":	true
+			}
+		}, {
+			"streams":	[{
+					"socket":	6,
+					"start":	0.100096,
+					"end":	0.200097,
+					"seconds":	0.10000099986791611,
+					"bytes":	11760448,
+					"bits_per_second":	940826432.9783504,
+					"retransmits":	0,
+					"snd_cwnd":	3964624,
+					"snd_wnd":	5549056,
+					"rtt":	31326,
+					"rttvar":	1862,
+					"pmtu":	1500,
+					"omitted":	false,
+					"sender":	true
+				}],
+			"sum":	{
+				"start":	0.100096,
+				"end":	0.200097,
+				"seconds":	0.10000099986791611,
+				"bytes":	11760448,
+				"bits_per_second":	940826432.9783504,
+				"retransmits":	0,
+				"omitted":	false,
+				"sender":	true
+			}
+		}, {
+			"streams":	[{
+					"socket":	6,
+					"start":	0.200097,
+					"end":	0.263807,
+					"seconds":	0.0637099966406822,
+					"bytes":	8388608,
+					"bits_per_second":	1053349043.1413305,
+					"retransmits":	0,
+					"snd_cwnd":	9503224,
+					"snd_wnd":	8355840,
+					"rtt":	54780,
+					"rttvar":	2253,
+					"pmtu":	1500,
+					"omitted":	false,
+					"sender":	true
+				}],
+			"sum":	{
+				"start":	0.200097,
+				"end":	0.263807,
+				"seconds":	0.0637099966406822,
+				"bytes":	8388608,
+				"bits_per_second":	1053349043.1413305,
+				"retransmits":	0,
+				"omitted":	false,
+				"sender":	true
+			}
+		}],
+	"end":	{
+		"streams":	[{
+				"sender":	{
+					"socket":	6,
+					"start":	0,
+					"end":	0.263807,
+					"seconds":	0.263807,
+					"bytes":	20971520,
+					"bits_per_second":	635965535.41035676,
+					"retransmits":	0,
+					"max_snd_cwnd":	9503224,
+					"max_snd_wnd":	8355840,
+					"max_rtt":	54780,
+					"min_rtt":	20496,
+					"mean_rtt":	35534,
+					"sender":	true
+				},
+				"receiver":	{
+					"socket":	6,
+					"start":	0,
+					"end":	0.352031,
+					"seconds":	0.263807,
+					"bytes":	17764064,
+					"bits_per_second":	403693174.74881476,
+					"sender":	true
+				}
+			}],
+		"sum_sent":	{
+			"start":	0,
+			"end":	0.263807,
+			"seconds":	0.263807,
+			"bytes":	20971520,
+			"bits_per_second":	635965535.41035676,
+			"retransmits":	0,
+			"sender":	true
+		},
+		"sum_received":	{
+			"start":	0,
+			"end":	0.352031,
+			"seconds":	0.352031,
+			"bytes":	17764064,
+			"bits_per_second":	403693174.74881476,
+			"sender":	true
+		},
+		"cpu_utilization_percent":	{
+			"host_total":	8.5221646844591135,
+			"host_user":	0.33403516758663859,
+			"host_system":	8.1881295168724755,
+			"remote_total":	3.447531512903391,
+			"remote_user":	0.84129085032293971,
+			"remote_system":	2.6062406625804511
+		},
+		"sender_tcp_congestion":	"dctcp",
+		"receiver_tcp_congestion":	"dctcp"
+	}
+}

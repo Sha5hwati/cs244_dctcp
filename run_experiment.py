@@ -8,6 +8,7 @@ from mininet.log import setLogLevel, info
 
 from initialize_topology import MininetTopology, TopologyType
 from configure_network import configure_network
+from configure_network_dumbbell import configure_network_dumbbell
 from generate_traffic import generate_traffic, TrafficPattern
 from visualize_network import visualize_mininet
 from configure_network import (
@@ -47,7 +48,10 @@ def run_experiment(
 
     # Configure devices in the topology.
     print("Configuring network...")
-    configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
+    if topology_type == TopologyType.DUMBBELL:
+        configure_network_dumbbell(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
+    else:
+        configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
     print_config(net)
 
     # Save experiment data
@@ -84,7 +88,7 @@ def print_config(net):
         print(f"Host {host.name}: {algo}")
 
     for switch in net.switches:
-        qm = switch.cmd("sudo tc -s -d qdisc show").strip()
+        qm = switch.cmd("sudo tc qdisc show").strip()
         print(f"Switch {switch.name}: {qm}")
 
     receiver = net.get("receiver")
