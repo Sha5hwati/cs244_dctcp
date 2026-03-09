@@ -4,7 +4,7 @@ from mininet.net import Mininet
 
 def configure_network_dumbbell(
     net: Mininet,
-    sender_cca: CongestionControlAlgo,
+    sender_cca: dict[str, CongestionControlAlgo],
     switch_qm: QueueManagement,
     receiver_feedback: ReceiverFeedback,
 ) -> None:
@@ -15,7 +15,10 @@ def configure_network_dumbbell(
     """
 
     receiver = net.get(RECEIVER_NAME)
-    print(f"Setup: CCA={sender_cca.value}, switch QM={switch_qm.value}, receiver FEEDBACK={receiver_feedback.value}")
+    sender_cca = {name: cca for name, cca in sender_cca.items()}
+    
+    sender_cca_str = ", ".join(f"{name}: {cca}" for name, cca in sender_cca.items())
+    print(f"Setup: CCA={sender_cca_str}, switch QM={switch_qm.value}, receiver FEEDBACK={receiver_feedback.value}")
 
     # Configure same CCA for senders and receiver.
     # TODO: figure out if we need to configure here as well or if OS level is sufficient
@@ -29,24 +32,29 @@ def configure_network_dumbbell(
         except subprocess.CalledProcessError as e:
             print(f"Error loading congestion control algorithm {allowed_cc}: {e}")
             return
-        host.cmd(f"sudo sysctl -w net.ipv4.tcp_congestion_control={sender_cca.value}")
-        print(f"Configured {host.name} with congestion control algorithm {sender_cca.value}")
+        
+        cca = sender_cca.get(host.name, "NA")  # default to cubic if not specified
+        if cca == "NA":
+            print(f"Warning: No CCA specified for {host.name}, defaulting to cubic")
+            cca = "cubic"
+        host.cmd(f"sudo sysctl -w net.ipv4.tcp_congestion_control={cca}")
+        print(f"Configured {host.name} with congestion control algorithm {cca}")
 
         # Disable GRO/LRO so the kernel sees every individual ACK
         host.cmd(f"ethtool -K {host.name}-eth0 gro off lro off")
 
         # Additional settings for specific CCAs.
         # Cubic and Reno should work well with default settings.
-        if sender_cca == CongestionControlAlgo.DCTCP:
+        if cca == CongestionControlAlgo.DCTCP:
             # Enable ECN and disable fallback to loss-based behavior for DCTCP experiments.
             host.cmd("sudo sysctl -w net.ipv4.tcp_ecn=1")
             host.cmd("sudo sysctl -w net.ipv4.tcp_ecn_fallback=0")
 
-        if sender_cca == CongestionControlAlgo.BBR:
+        if cca == CongestionControlAlgo.BBR:
             # BBR benefits from fair queuing / pacing on the sender interface.
             host.cmd(f"sudo tc qdisc replace dev {host.name}-eth0 root fq")
             
-        if sender_cca == CongestionControlAlgo.CUBIC:
+        if cca == CongestionControlAlgo.CUBIC:
             # Cubic can be bursty, so we enable pacing to smooth out bursts.
             host.cmd(f"sudo tc qdisc replace dev {host.name}-eth0 root fq pacing")
             # Ensure ECN is in 'selective' mode (1) or off (0) for pure loss-based CUBIC
@@ -112,7 +120,7 @@ def configure_network_dumbbell(
 
         print(f"Configured switch {switch.name} with queue management scheme {switch_qm.value}")
 
-    if sender_cca == CongestionControlAlgo.DCTCP:
+    if switch_qm == QueueManagement.ECN:
         receiver.cmd('sudo sysctl -w net.ipv4.tcp_ecn=1')
     
     # Configure receiver to either send acks immediately or delay them.

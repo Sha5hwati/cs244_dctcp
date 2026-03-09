@@ -44,7 +44,8 @@ def run_cli():
         traffic_pattern=traffic_pattern
     )
     # Find name of directory with results based on each scenario and generate graphs from results.
-    directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+    # directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+    directory_path = "/home/shashwatishradha/cs244_dctcp/data/dumbbell_cubic_dctcp_ecn_immediate_ack_elephant_vs_mice"
     print(f"\nExperiment finished. Generating graphs in {directory_path}...")
     generate_graphs(directory_path)
 
