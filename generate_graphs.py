@@ -36,12 +36,28 @@ def generate_graphs(json_directory):
         df = flow_data.get(label)
         tp_cov = df['throughput'].std() / df['throughput'].mean() if df is not None else 0
         p99_rtt = df['rtt'].quantile(0.99) if df is not None else 0
+        p50_rtt = df['rtt'].mean() if df is not None else 0
+        min_rtt = df['rtt'].min() if df is not None else 0
+        max_rtt = df['rtt'].max() if df is not None else 0
+        rtt_cov = df['rtt'].std() / df['rtt'].mean() if df is not None else 0
+        mean_cwnd = df['congestion_window'].mean() if df is not None else 0
+        min_cwnd = df['congestion_window'].min() if df is not None else 0
+        max_cwnd = df['congestion_window'].max() if df is not None else 0
+        cwnd_cov = df['congestion_window'].std() / df['congestion_window'].mean() if df is not None else 0
 
         summary_results.append({
             'Flow': label,
             'Avg_Throughput_Mbps': stats['avg_throughput'],
             'Throughput_CoV': tp_cov, # Variance/Stability
-            'P99_RTT_ms': p99_rtt,    # Tail Latency
+            'P50_RTT_ms': p50_rtt,     # Median RTT
+            'P99_RTT_ms': p99_rtt,    # Tail RTT
+            'Min_RTT': min_rtt,
+            'Max_RTT': max_rtt,
+            'RTT_CoV': rtt_cov,
+            'Mean_Cwnd': mean_cwnd,
+            'Min_Cwnd': min_cwnd,
+            'Max_Cwnd': max_cwnd,
+            'Cwnd_CoV': cwnd_cov,
             'FCT_s': stats['fct'],    # Mouse Flow Success
             'Retransmissions': stats['retransmits']
         })

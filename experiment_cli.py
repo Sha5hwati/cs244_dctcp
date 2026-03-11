@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from run_experiment import run_experiment
+# from run_experiment import run_experiment
 from generate_graphs import generate_graphs
 from parameters import *
 
