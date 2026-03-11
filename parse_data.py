@@ -23,6 +23,25 @@ def parse_json(file):
         })
     return pd.DataFrame(data)
 
+def parse_summary_stats(file) -> dict:
+    """Extract end-of-test summary statistics (FCT, Retransmits, Mean RTT)."""
+    with open(file, 'r') as f:
+        iperf_data = json.load(f)
+    
+    if 'end' not in iperf_data or 'streams' not in iperf_data['end']:
+        return {}
+
+    end_data = iperf_data['end']['streams'][0]['sender']
+    return {
+        'fct': end_data['seconds'], # Flow Completion Time
+        'total_bytes': end_data['bytes'],
+        'avg_throughput': end_data['bits_per_second'] / 1e6,
+        'retransmits': end_data.get('retransmits', 0),
+        'mean_rtt': end_data.get('mean_rtt', 0) / 1000,
+        'max_rtt': end_data.get('max_rtt', 0) / 1000,
+        'min_rtt': end_data.get('min_rtt', 0) / 1000,
+    }
+
 def calculate_jains_fairness_index(data):
     """Use Jain's fairness index as measure of fairness."""
     # First drop any flows that are not sending data at this time point.

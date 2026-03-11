@@ -1,12 +1,16 @@
 import subprocess
-from parameters import CongestionControlAlgo, ReceiverFeedback, QueueManagement, SWITCH_NAME, RECEIVER_NAME
+from parameters import *
 from mininet.net import Mininet
 
 def configure_network(
     net: Mininet,
+    topology_type: TopologyType,
     sender_cca: CongestionControlAlgo,
     switch_qm: QueueManagement,
     receiver_feedback: ReceiverFeedback,
+    dctcp_g: int,
+    dctcp_min: int,
+    dctcp_max: int,
 ) -> None:
     """Configure CC algorithm, switch QM and receiver ACK strategies inside Mininet.
 
@@ -34,12 +38,15 @@ def configure_network(
 
         # Disable GRO/LRO so the kernel sees every individual ACK
         host.cmd(f"ethtool -K {host.name}-eth0 gro off lro off")
-        # Enable FQ Pacing to smooth out packet transitions
-        host.cmd(f"tc qdisc add dev {host.name}-eth0 root fq pacing")
 
         # Additional settings for specific CCAs.
         # Cubic and Reno should work well with default settings.
         if sender_cca == CongestionControlAlgo.DCTCP:
+            # Update the g parameter to the given value for DCTCP.
+
+            host.cmd(f"echo {dctcp_g} | sudo tee /sys/module/tcp_dctcp/parameters/dctcp_shift_g")
+            print(f"Configured {host.name} DCTCP shift g to {dctcp_g}")
+
             # Enable ECN and disable fallback to loss-based behavior for DCTCP experiments.
             host.cmd("sudo sysctl -w net.ipv4.tcp_ecn=1")
             host.cmd("sudo sysctl -w net.ipv4.tcp_ecn_fallback=0")
@@ -59,41 +66,48 @@ def configure_network(
 
             # ECN will mark packets over the min threshold instead of dropping them.
             print(f"--- Attempting to configure ECN on {intf.name} with QM {switch_qm.value}")
+
+            loss = StarTopologyParameters.LOSS.value if topology_type == TopologyType.STAR else DumbbellTopologyParameters.LOSS.value
+            jitter = StarTopologyParameters.JITTER.value if topology_type == TopologyType.STAR else DumbbellTopologyParameters.JITTER.value
+            delay = StarTopologyParameters.DELAY.value if topology_type == TopologyType.STAR else DumbbellTopologyParameters.DELAY.value
+            bandwidth = StarTopologyParameters.BANDWIDTH.value if topology_type == TopologyType.STAR else DumbbellTopologyParameters.BANDWIDTH.value
+            queue_size = StarTopologyParameters.QUEUE_SIZE.value if topology_type == TopologyType.STAR else DumbbellTopologyParameters.QUEUE_SIZE.value
               
             # Clear everything for the interface.
             cmd = switch.cmd(f"sudo tc qdisc del dev {intf.name} root")
-            # Add HTB structure with 1000Mbit bandwidth to ensure we can fully utilize the link
+            # Add HTB structure with `bandwidth` to ensure we can fully utilize the link
             cmd1 = switch.cmd(f"sudo tc qdisc add dev {intf.name} root handle 5: htb default 1")
-            cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate 1000Mbit")
+            cmd2 = switch.cmd(f"sudo tc class add dev {intf.name} parent 5: classid 5:1 htb rate {bandwidth}Mbit")
             for cmd in [cmd, cmd1, cmd2]:
                 if cmd.strip():
                     print(f"--- Error: could not configure root qdisc on {intf.name}: {cmd.strip()}")
 
+            switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: netem delay {delay} {jitter} loss {loss}%")
+
             if switch_qm == QueueManagement.TAILDROP:
-                # Limit the queue length to 100 packets.
-                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: pfifo limit 100")
+                # Limit the queue length to packet_lo packets.
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 10: handle 20: pfifo limit {queue_size}")
                 
                 if cmd.strip():
                     print(f"--- Error: could not configure TAILDROP on {intf.name}: {cmd.strip()}")
             
             elif switch_qm == QueueManagement.RED:
-                
                 # Start dropping packets at 15kb with 10% chance, drop all packets after 20kb. We keep the range small
                 # for now to ensure we get bottlenecked, but might make it larger later.
-                cmd = switch.cmd(f'sudo tc qdisc replace dev {intf.name} parent 5:1 handle 10: red limit 1mb min 15kb '
-                           'max 20kb avpkt 1500 burst 20 probability 0.1 bandwidth 1000Mbit")')
+                cmd = switch.cmd(f'sudo tc qdisc add dev {intf.name} parent 10: handle 20: red limit 1mb min 15kb '
+                           f'max 20kb avpkt 1500 burst 20 probability 0.1 bandwidth {bandwidth}Mbit")')
                 
                 # Check if command succeeded and print any errors to console. 
                 if cmd.strip():
                     print(f"--- Error: could not configure RED on {intf.name}: {cmd.strip()}")
 
             elif switch_qm == QueueManagement.ECN:
-                
-                 
+                burst_size = int((2 * dctcp_min + dctcp_max) / (3 * 1.5)) + 2
                 # Setup ECN marking with RED parameters. 
                 # We use a small range for min and max thresholds to ensure we get bottlenecked and see ECN in action.
-                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 5:1 handle 10: red "
-                                f"limit 1mb min 30kb max 90kb avpkt 1500 burst 25 probability 1.0 ecn bandwidth 1000Mbit")
+                # FIX 4: Increase alpha in ECN (thresholds). Change burst size accordingly.
+                cmd = switch.cmd(f"sudo tc qdisc add dev {intf.name} parent 10: handle 20: red "
+                                f"limit 1mb min {dctcp_min}kb max {dctcp_max}kb avpkt 1500 burst {burst_size} probability 1.0 ecn bandwidth {bandwidth}Mbit")
                 
                 # Check if command succeeded and print any errors to console. 
                 if cmd.strip():

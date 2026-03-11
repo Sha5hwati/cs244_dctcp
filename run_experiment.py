@@ -15,7 +15,7 @@ from configure_network import (
     QueueManagement,
     ReceiverFeedback,
 )
-from parameters import NUM_SENDERS
+from parameters import *
 
 def run_experiment(
     topology_type: TopologyType,
@@ -23,6 +23,9 @@ def run_experiment(
     switch_qm: QueueManagement,
     receiver_feedback: ReceiverFeedback,
     traffic_pattern: TrafficPattern,
+    dctcp_g=DEFAULT_DCTCP_G,
+    dctcp_min=DEFAULT_DCTCP_MIN,
+    dctcp_max=DEFAULT_DCTCP_MAX,
 ) -> None:
     """Create a Mininet topology, apply settings, run traffic, and collect logs.
 
@@ -47,12 +50,12 @@ def run_experiment(
 
     # Configure devices in the topology.
     print("Configuring network...")
-    configure_network(net, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback)
+    configure_network(net, topology_type=topology_type, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback, dctcp_g=dctcp_g, dctcp_min=dctcp_min, dctcp_max=dctcp_max)
     print_config(net)
 
     # Save experiment data
     log_dir = Path(
-        f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+        f"data/{topology_type.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_g{dctcp_g}_min{dctcp_min}_max{dctcp_max}"
     )
     log_dir.mkdir(parents=True, exist_ok=True)
 

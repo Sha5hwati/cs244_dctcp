@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# Importing existing logic from your files
 from run_experiment import run_experiment
 from generate_graphs import generate_graphs
 from parameters import *
@@ -17,7 +16,16 @@ def run_cli():
     parser.add_argument('--cca', type=str, default='cubic', choices=[cca.value for cca in CongestionControlAlgo], help='Congestion Control Algorithm')
     parser.add_argument('--qm', type=str, default='taildrop', choices=[qm.value for qm in QueueManagement], help='Queue Management')
     parser.add_argument('--feedback', type=str, default='immediate_ack', choices=[feedback.value for feedback in ReceiverFeedback], help='Receiver Feedback')
+    parser.add_argument('--directory_path', type=str, default='', help='Optional directory path. If provided, the data in directory path will be analyzed')
+    parser.add_argument('--dctcp_g', type=int, default=DEFAULT_DCTCP_G, help='Optional g value for DCTCP.')
+    parser.add_argument('--dctcp_min', type=int, default=DEFAULT_DCTCP_MIN, help='Optional min value for DCTCP.')
+    parser.add_argument('--dctcp_max', type=int, default=DEFAULT_DCTCP_MAX, help='Optional max value for DCTCP.')
     args = parser.parse_args()
+
+    if args.directory_path:
+        print(f"Analyzing data for directory path {args.directory_path}...")
+        generate_graphs(args.directory_path)
+        return
 
     try:
         topology = TopologyType(args.topology)
@@ -41,10 +49,13 @@ def run_cli():
         sender_cca=sender_cca,
         switch_qm=switch_qm,
         receiver_feedback=receiver_feedback,
-        traffic_pattern=traffic_pattern
+        traffic_pattern=traffic_pattern,
+        dctcp_g=args.dctcp_g,
+        dctcp_min=args.dctcp_min,
+        dctcp_max=args.dctcp_max,
     )
     # Find name of directory with results based on each scenario and generate graphs from results.
-    directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+    directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_g{args.dctcp_g}_min{args.dctcp_min}_max{args.dctcp_max}"
     print(f"\nExperiment finished. Generating graphs in {directory_path}...")
     generate_graphs(directory_path)
 

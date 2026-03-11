@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
 from parse_data import *
-from parameters import Metrics, EXPERIMENT_TABLE
+from parameters import *
 
 def generate_graphs(json_directory):
     """This function takes in a Path to a directory of iperf3 json data and generates
@@ -14,6 +14,7 @@ def generate_graphs(json_directory):
     # Get all json files in the given directory and label each flow by filename (without .json).
     json_files = list(path.glob("*.json"))
     raw_flows = {f.stem: parse_json(f) for f in json_files}
+    summaries = {f.stem: parse_summary_stats(f) for f in json_files}
     
     # Find the global start time (the earliest 'abs_start' among all files)
     global_start = min(df['abs_start'].iloc[0] for df in raw_flows.values())
@@ -25,6 +26,33 @@ def generate_graphs(json_directory):
         offset = df['abs_start'].iloc[0] - global_start
         df['time'] = df['time'] + offset
         flow_data[label] = df
+
+    # Metric Calculations
+    bottleneck_bw = float(StarTopologyParameters.BANDWIDTH.value) if "star" in str(path) else float(DumbbellTopologyParameters.BANDWIDTH.value)
+    
+    summary_results = []
+    for label, stats in summaries.items():
+        if not stats: continue
+        df = flow_data.get(label)
+        tp_cov = df['throughput'].std() / df['throughput'].mean() if df is not None else 0
+        p99_rtt = df['rtt'].quantile(0.99) if df is not None else 0
+
+        summary_results.append({
+            'Flow': label,
+            'Avg_Throughput_Mbps': stats['avg_throughput'],
+            'Throughput_CoV': tp_cov, # Variance/Stability
+            'P99_RTT_ms': p99_rtt,    # Tail Latency
+            'FCT_s': stats['fct'],    # Mouse Flow Success
+            'Retransmissions': stats['retransmits']
+        })
+
+    # Save to CSV for easy comparison in the report
+    pd.DataFrame(summary_results).to_csv(path / "summary_metrics.csv", index=False)
+
+    # 3. Calculate Link Utilization
+    aligned_tp = pd.concat([df.set_index('time')['throughput'] for df in flow_data.values()], axis=1).fillna(0)
+    avg_util = aligned_tp.sum(axis=1).mean() / bottleneck_bw
+    print(f"Scenario {path.name} | Utilization: {avg_util:.2%}")
     
     # Initialize plot.
     # TODO: adjust visualization parameters as needed
@@ -68,6 +96,15 @@ if __name__ == "__main__":
         switch_qm = scenario['qm']
         receiver_feedback = scenario['feedback']
         traffic_pattern = scenario['traffic']
+        g = DEFAULT_DCTCP_G
+        min = DEFAULT_DCTCP_MIN
+        max = DEFAULT_DCTCP_MAX
+        if 'dctcp_g' in scenario:
+            g = scenario['dctcp_g']
+        if 'dctcp_min' in scenario:
+            min = scenario['dctcp_min']
+        if 'dctcp_max' in scenario:
+            max = scenario['dctcp_max']
         # Find name of directory with results based on each scenario.
-        directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}"
+        directory_path = f"data/{topology.value}_{sender_cca.value}_{switch_qm.value}_{receiver_feedback.value}_{traffic_pattern.value}_g{g}_min{min}_max{max}"
         generate_graphs(directory_path)
