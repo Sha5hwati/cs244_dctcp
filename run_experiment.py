@@ -8,6 +8,7 @@ from mininet.log import setLogLevel, info
 
 from initialize_topology import MininetTopology, TopologyType
 from configure_network import configure_network
+from configure_network_dumbbell import configure_network_dumbbell
 from generate_traffic import generate_traffic, TrafficPattern
 from visualize_network import visualize_mininet
 from configure_network import (
@@ -50,7 +51,11 @@ def run_experiment(
 
     # Configure devices in the topology.
     print("Configuring network...")
-    configure_network(net, topology_type=topology_type, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback, dctcp_g=dctcp_g, dctcp_min=dctcp_min, dctcp_max=dctcp_max)
+    if (topology_type == TopologyType.DUMBBELL):
+        configure_network_dumbbell(net, topology_type=topology_type, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback, dctcp_g=dctcp_g, dctcp_min=dctcp_min, dctcp_max=dctcp_max)
+    else:
+        configure_network(net, topology_type=topology_type, sender_cca=sender_cca, switch_qm=switch_qm, receiver_feedback=receiver_feedback, dctcp_g=dctcp_g, dctcp_min=dctcp_min, dctcp_max=dctcp_max)
+
     print_config(net)
 
     # Save experiment data

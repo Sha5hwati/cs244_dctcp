@@ -24,7 +24,7 @@ def configure_network(
     # Configure same CCA for senders and receiver.
     # TODO: figure out if we need to configure here as well or if OS level is sufficient
     # Allow a set of algorithms so switching is possible inside namespaces.
-    allowed_cc = "cubic reno dctcp bbr"
+    allowed_cc = "cubic reno dctcp bbr dctcp_v1 dctcp_v2 dctcp_v3 dctcp_v4 dctcp_v5 dctcp_v6"
 
     for host in net.hosts:
         # Enable the allowed set and select the desired algorithm.
@@ -43,7 +43,6 @@ def configure_network(
         # Cubic and Reno should work well with default settings.
         if sender_cca == CongestionControlAlgo.DCTCP:
             # Update the g parameter to the given value for DCTCP.
-
             host.cmd(f"echo {dctcp_g} | sudo tee /sys/module/tcp_dctcp/parameters/dctcp_shift_g")
             print(f"Configured {host.name} DCTCP shift g to {dctcp_g}")
 

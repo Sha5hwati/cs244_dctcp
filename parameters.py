@@ -1,16 +1,12 @@
 from enum import Enum
 
-# TODO: add some description of each parameter.
-
 # Common constants used by the experiment scripts.
-# TODO: check if we need to change this to a parameter for run_experiment
 NUM_SENDERS = 4
 SWITCH_NAME = "switch1"
 RECEIVER_NAME = "receiver"
-# K must be greater than 17 KB for star BDP value; we might change this.
-DEFAULT_DCTCP_MIN = 30
-DEFAULT_DCTCP_MAX = 31
-DEFAULT_DCTCP_G = 4
+DEFAULT_DCTCP_MIN = 30 # 30 for Star topology, 200 for Dumbbell topology
+DEFAULT_DCTCP_MAX = 31 # 31 for Star topology, 201 for Dumbbell topology
+DEFAULT_DCTCP_G = 4 # 4 for Star topology, 6 for Dumbbell topology
 
 # Possible topology types.
 class TopologyType(Enum):
@@ -20,10 +16,10 @@ class TopologyType(Enum):
 # Dumbbell-specific topology parameters.
 class DumbbellTopologyParameters(Enum):
     BANDWIDTH = 950  # Mbps (bottleneck link)
-    QUEUE_SIZE = 500
+    QUEUE_SIZE = 200
     DELAY = "10ms" # For 20ms RTT
-    LOSS = 0
-    JITTER = "0ms"
+    LOSS = 0.1
+    JITTER = "2ms"
 
 # Star-specific topology parameters.
 class StarTopologyParameters(Enum):
@@ -46,6 +42,12 @@ class CongestionControlAlgo(Enum):
     RENO = 'reno'
     DCTCP = 'dctcp'
     BBR = 'bbr'
+    DCTCP_V1 = 'dctcp_v1'
+    DCTCP_V2 = 'dctcp_v2'
+    DCTCP_V3 = 'dctcp_v3'
+    DCTCP_V4 = 'dctcp_v4'
+    CTCP_V5 = 'dctcp_v5'
+    DCTCP_V6 = 'dctcp_v6'
 
 # Queue management scheme used at the bottleneck switch.
 class QueueManagement(Enum):
